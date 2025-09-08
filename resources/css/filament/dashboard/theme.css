@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+
+.at-relationship-schema-item {
+    .fi-fo-repeater-item-content {
+        @apply flex justify-center;
+
+        .fi-sc {
+            @apply flex items-center gap-2;
+
+            .fi-dropdown-list-item {
+                @apply not-italic;
+            }
+        }
+    }
+}
