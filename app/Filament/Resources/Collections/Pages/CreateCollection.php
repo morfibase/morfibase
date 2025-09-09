@@ -30,7 +30,7 @@ class CreateCollection extends CreateRecord
     {
         try {
             $tableName = CollectionHelper::uuidToTableName($this->record->id); 
-            $schema = $this->record->schema;
+            $schema = $this->record->fields();
 
             Schema::create($tableName, function (Blueprint $table) use ($schema) {
                 $table->id();
@@ -66,6 +66,7 @@ class CreateCollection extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {   
+        BuilderHelper::generateRandomColumnName($data['display_field']);
         BuilderHelper::generateRandomColumnName($data['schema']);
 
         return $data;

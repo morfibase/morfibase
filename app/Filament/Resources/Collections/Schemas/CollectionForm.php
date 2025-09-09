@@ -41,7 +41,28 @@ class CollectionForm
                                     ->live()
                                     ->required(),
 
+                                Builder::make('display_field')
+                                    ->label('Schema')
+                                    ->deletable(false)
+                                    ->reorderable(false)
+                                    ->helperText('This field will be shown whenever this record is referenced in another table or dropdown.')
+                                    ->collapsible(false)
+                                    ->required()
+                                    ->maxItems(1)
+                                    ->blocks([
+                                        SchemaBlock::textInput(true)
+                                            ->label('Display field'),
+                                    ])
+                                    ->blockNumbers(false)
+                                    ->default([
+                                        [
+                                            'type' => 'textInput',
+                                            'content' => '',
+                                        ],
+                                    ]),
+
                                 Builder::make('schema')
+                                    ->hiddenLabel()
                                     ->collapsible()
                                     ->blocks([
                                         SchemaBlock::textInput(),

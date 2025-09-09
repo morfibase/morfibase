@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Collections\Pages;
 
 use App\Filament\Resources\Collections\CollectionResource;
 use App\Helpers\Collection\BuilderHelper;
+use App\Helpers\Collection\CollectionHelper;
 use App\Helpers\Collection\Migrations\OneToManyMigration;
 use App\Helpers\Collection\Migrations\OneToOneMigration;
 use App\Helpers\Collection\Migrations\RelationshipForeignKey;
@@ -67,8 +68,9 @@ class EditCollection extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $this->tableName = $this->record->id;
-        $oldSchema = $this->record->schema;
+        $fields = array_merge($data['display_field'], $data['schema']);
+        $this->tableName = CollectionHelper::uuidToTableName($this->record->id);
+        $oldSchema = $this->record->fields();
         $oldSchemaColumnNames = [];
 
         foreach($oldSchema as $field) {
@@ -76,7 +78,7 @@ class EditCollection extends EditRecord
         }
 
         // Look for fields that are present in the $oldSchema but not present in the $data (since they were deleted)
-        $newSchemaColumnNames = array_map(fn($field) => $field['data']['db_column_name'], $data['schema']);
+        $newSchemaColumnNames = array_map(fn($field) => $field['data']['db_column_name'], $fields);
         $this->toDeleteDbColumns = array_diff($oldSchemaColumnNames, $newSchemaColumnNames);
         $this->toAddDbColumns = BuilderHelper::generateRandomColumnName($data['schema'], $oldSchemaColumnNames);
 
@@ -152,7 +154,7 @@ class EditCollection extends EditRecord
                 ->danger()
                 ->title('The collection could not be updated because of a database error.')
                 ->send();
-
+            
             Log::error([
                 'message' => $e->getMessage(),
                 'location' => 'EditCollection.php, afterSave() method',

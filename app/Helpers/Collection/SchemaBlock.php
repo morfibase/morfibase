@@ -33,7 +33,7 @@ class SchemaBlock
         ];
     }
 
-    public static function textInput(): Block
+    public static function textInput(bool $isDisplayField = false): Block
     {
         return Block::make('textInput')
             ->label('Text Input')
@@ -59,6 +59,9 @@ class SchemaBlock
                             ->columns(2)
                             ->schema([
                                 Toggle::make('required')
+                                    ->disabled($isDisplayField == true)
+                                    ->default(true)
+                                    ->helperText(fn() => $isDisplayField ? 'This field serves as the Display Field and cannot be empty.' : '')
                                     ->columnSpan(2),
 
                                 Select::make('inputType')

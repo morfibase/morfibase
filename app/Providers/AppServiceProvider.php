@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         FilamentView::registerRenderHook(
-            PanelsRenderHook::SIDEBAR_NAV_START,
+            PanelsRenderHook::SIDEBAR_NAV_END,
             fn () => Blade::render('<livewire:generic-collection-sidebar />')
         );
     }

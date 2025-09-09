@@ -16,6 +16,16 @@ class FormBuilder
         $form = [];
         $schema = $collection->schema;
         $relationships = $collection->relationships;
+        $displayField = $collection->display_field;
+
+        foreach ($displayField as $field) {
+            $fieldType = $field['type'] ?? null;
+            $fieldData = $field['data'] ?? null;
+
+            if($fieldType && $fieldData) {
+                $form[] = self::genericField($fieldType, $classReferences[$fieldType], $fieldData, $formAction);
+            }
+        }
 
         foreach ($schema as $field) {
             $fieldType = $field['type'] ?? null;
@@ -23,6 +33,22 @@ class FormBuilder
 
             if($fieldType && $fieldData) {
                 $form[] = self::genericField($fieldType, $classReferences[$fieldType], $fieldData, $formAction);
+            }
+        }
+
+        foreach ($relationships as $relationship) {
+            if($relationship['relationship_type'] == 'belongsTo') {
+                $relationshipBTable = $relationship['relationship_b_table'];
+                $tableBId = CollectionHelper::tableNameToUuid($relationshipBTable);
+                $tableB = Collection::where('id', '=', $tableBId)->first();
+
+                $options = GenericModel::genericQuery($tableB)->get()->keyBy('id');
+                $form[] = self::genericField('select', $classReferences['select'], [
+                    'db_column_name' => CollectionHelper::tableNameToForeignKeyName($relationshipBTable),
+                    'label' => $tableB->name,
+                    'options' => $options,
+                    'native' => false
+                ], $formAction);
             }
         }
 

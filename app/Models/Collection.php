@@ -13,6 +13,7 @@ class Collection extends Model
 
     protected $fillable = [
         'name',
+        'display_field',
         'schema',
         'user_id',
         'owner_type',
@@ -24,7 +25,8 @@ class Collection extends Model
     {
         return [
             'schema' => 'array',
-            'relationships' => 'array'
+            'relationships' => 'array',
+            'display_field' => 'array'
         ];
     }
 
@@ -36,5 +38,13 @@ class Collection extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->select(['id', 'name', 'email', 'email_verified_at', 'created_at', 'updated_at']);
+    }
+
+    /**
+     * Get all the fields combined (both the mandatory display field and the schema)
+     */
+    public function fields(): array
+    {
+        return array_merge($this->display_field, $this->schema);
     }
 }
