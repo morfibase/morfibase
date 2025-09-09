@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         FilamentView::registerRenderHook(
             PanelsRenderHook::SIDEBAR_NAV_END,
-            fn () => Blade::render('<livewire:generic-collection-sidebar />')
+            fn () => Blade::render('<livewire:generic-sidebar />')
         );
     }
 }
