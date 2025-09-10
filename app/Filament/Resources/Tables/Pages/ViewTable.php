@@ -11,6 +11,8 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ViewTable extends ViewRecord
 {
@@ -24,45 +26,69 @@ class ViewTable extends ViewRecord
                 ->label('Create new ' . strtolower($this->record->name))
                 ->schema(FormBuilder::generate($this->record))
                 ->action(function($data) {
-                    $attributes = [];
-                    $foreignAttributes = [];
-                    $relationships = $this->record->relationships;
-                    $displayField = $this->record->display_field;
-                    $schema = $this->record->fields();
+                    DB::transaction(function () use ($data) {
+                        $attributes = [];
+                        $relationships = $this->record->relationships;
+                        $schema = $this->record->fields();
+                        $attributes['id'] = (string) Str::uuid();
+                        $toCreateRelationshipRecords = [];
+                        
+                        /**
+                         * Add relation related fields to the attributes array
+                         */
+                        foreach($relationships as $relationship) {
+                            $relationshipType = $relationship['relationship_type'];
+                            $tableARelation = $relationship['relationship_a_table'];
+                            $tableBRelation = $relationship['relationship_b_table'];
+                            $tableAId = TableHelper::tableNameToUuid($tableARelation);
+                            $tableBId = TableHelper::tableNameToUuid($tableBRelation);
+                            $tableB = Table::where('id', '=', $tableBId)->first();
+                            $tableAForeignKeyName = TableHelper::tableNameToForeignKeyName($tableARelation);
+                            $tableBForeignKeyName = TableHelper::tableNameToForeignKeyName($tableBRelation);
 
-                    $hasRelationship = false;
-
-                    // foreach($relationships as $relationship) {
-                    //     if(in_array($relationship['relationship_type'], ['hasOne', 'hasMany'])) {
-                    //         $tableA = $relationship['relationship_a_table'];
-                    //         $foreignKeyName = TableHelper::tableNameToForeignKeyName($tableA);
-
-                    //         $tableB = $relationship['relationship_b_table'];
-                    //         $tableBId = TableHelper::tableNameToUuid($tableB);
-                    //         $foreignKeyCollection = Table::where('id', '=', $tableBId)->first();
-
-                    //         $foreignAttributes[$foreignKeyName] = $data[$foreignKeyName];
-
-                    //         GenericModel::genericQuery($foreignKeyCollection)
-                    //             ->create($foreignAttributes);
-                    //     }
-                    // }
-
-
-                    foreach($schema as $field) {
-                        $attributes[$field['data']['db_column_name']] = $data[$field['data']['db_column_name']];
-                    }
-
-                    foreach($attributes as &$attribute) {
-                        if(is_array($attribute)) {
-                            $attribute = json_encode($attribute);
+                            if ($relationshipType == 'belongsTo') {
+                                if(isset($data[$tableBForeignKeyName])) {
+                                    $attributes[$tableBForeignKeyName] = $data[$tableBForeignKeyName];
+                                }
+                            } else if(in_array($relationshipType, ['hasOne', 'hasMany'])) {
+                                foreach($data['relationship_table_data'] as &$relationshipTables) {
+                                    foreach($relationshipTables as $tableName => &$relationshipData) {
+                                        foreach($relationshipData as &$tableColumns) {
+                                            $tableColumns[$tableAForeignKeyName] = $attributes['id'];
+                                            
+                                            // We can't create it here since the main record is not yet created
+                                            $toCreateRelationshipRecords[] = [
+                                                'table' => $tableB,
+                                                'data' => $tableColumns
+                                            ];
+                                        }                                        
+                                    }
+                                }
+                            }
                         }
-                    }
 
-                    GenericModel::genericQuery($this->record)
-                        ->create($attributes);
+                        foreach($schema as $field) {
+                            if(isset($data[$field['data']['db_column_name']])) {
+                                $attributes[$field['data']['db_column_name']] = $data[$field['data']['db_column_name']];
+                            }
+                        }
 
-                    $this->js('window.location.reload()'); 
+                        foreach($attributes as &$attribute) {
+                            if(is_array($attribute)) {
+                                $attribute = json_encode($attribute);
+                            }
+                        }
+
+                        GenericModel::genericQuery($this->record)
+                            ->create($attributes);
+
+                        foreach($toCreateRelationshipRecords as $relationshipRecord) {
+                            GenericModel::genericQuery($relationshipRecord['table'])
+                                ->create($relationshipRecord['data']);
+                        }
+
+                        $this->js('window.location.reload()'); 
+                    });
                 })
         ];
     }

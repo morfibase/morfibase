@@ -31,7 +31,7 @@ class TableForm
                 Tabs::make('Tabs')
                     ->persistTabInQueryString()
                     ->tabs([
-                        Tab::make('Schema')
+                        Tab::make('Fields')
                             ->schema([
                                 Hidden::make('user_id')
                                     ->live()
@@ -69,6 +69,9 @@ class TableForm
                                         SchemaBlock::select(),
                                     ])
                             ]),
+
+                        Tab::make('Views')
+                            ->schema([]),
 
                         Tab::make('Relationships')
                             ->schema([

@@ -25,4 +25,9 @@ class TableHelper
     {
         return $input . '_id';
     }
+
+    public static function isColumnName(string $name): bool
+    {
+        return str_starts_with($name, 'col_');
+    }
 }

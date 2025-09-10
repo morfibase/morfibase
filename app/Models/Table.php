@@ -15,10 +15,9 @@ class Table extends Model
         'name',
         'display_field',
         'schema',
+        'relationships',
+        'views',
         'user_id',
-        'owner_type',
-        'owner_id',
-        'relationships'
     ];
 
     protected function casts(): array
@@ -26,7 +25,8 @@ class Table extends Model
         return [
             'schema' => 'array',
             'relationships' => 'array',
-            'display_field' => 'array'
+            'display_field' => 'array',
+            'views' => 'array',
         ];
     }
 

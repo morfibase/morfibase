@@ -33,7 +33,7 @@ class CreateTable extends CreateRecord
             $schema = $this->record->fields();
 
             Schema::create($tableName, function (Blueprint $table) use ($schema) {
-                $table->id();
+                $table->uuid('id')->primary();
 
                 foreach($schema as $field) {
                     $table->text($field['data']['db_column_name'])->nullable();
