@@ -28,9 +28,8 @@ class DashboardPanelProvider extends PanelProvider
             ->id('dashboard')
             ->path('/')
             ->login()
-            ->registration()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
             ->viteTheme('resources/css/filament/dashboard/theme.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

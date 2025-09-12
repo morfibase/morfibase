@@ -26,12 +26,56 @@ class InstallAppCommand extends Command
      */
     public function handle()
     {
+        // Create .env file
+        $envExample = base_path('.env.example');
+        $envFile = base_path('.env');
+
+        if (!file_exists($envFile)) {
+            copy($envExample, $envFile);
+            $this->info('.env file create from .env.example');
+            $this->call('key:generate', [
+                '--force' => true,
+            ]);
+        } else {
+            $this->warn('.env file already exists, skipping');
+        }
+
+        // Ask user for app details
+        $appName = $this->ask('What is your application name?');
+        $appUrl  = $this->ask('What is your application URL? (e.g. https://morfibase.com)');
+
+        // Update .env file
+        $envContent = file_get_contents($envFile);
+
+        // Replace APP_NAME
+        $envContent = preg_replace(
+            '/^APP_NAME=.*/m',
+            'APP_NAME="'.addslashes($appName).'"',
+            $envContent
+        );
+
+        // Replace APP_URL
+        $envContent = preg_replace(
+            '/^APP_URL=.*/m',
+            'APP_URL='.$appUrl,
+            $envContent
+        );
+
+        // Save changes
+        file_put_contents($envFile, $envContent);
+
+        $this->info('.env file updated with APP_NAME and APP_URL.');
+
+        // Create db
         $dbPath = database_path('database.sqlite');
 
         // Create the SQLite file if it doesn't exist
         if (!file_exists($dbPath)) {
             touch($dbPath);
             chmod($dbPath, 0600);
+            $this->info('SQLite database created');
+        } else {
+            $this->warn('SQLite database already exists, skipping');
         }
 
         $pdo = new PDO('sqlite:' . $dbPath);
@@ -39,5 +83,15 @@ class InstallAppCommand extends Command
         $pdo->exec('PRAGMA synchronous=NORMAL;');
         $pdo->exec('PRAGMA foreign_keys=ON;');
         $pdo->exec('PRAGMA busy_timeout=5000;');
+
+        // Run migrations
+        $this->call('migrate', [
+            '--force' => true,
+        ]);
+        $this->info('Database migrated successfully.');
+
+        // Create user
+        $this->info("\n\nCreate your first account.");
+        $this->call('make:filament-user');
     }
 }
