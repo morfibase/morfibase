@@ -14,7 +14,7 @@ class Table extends Model
     protected $fillable = [
         'name',
         'display_field',
-        'schema',
+        'fields',
         'relationships',
         'views',
         'user_id',
@@ -23,7 +23,7 @@ class Table extends Model
     protected function casts(): array
     {
         return [
-            'schema' => 'array',
+            'fields' => 'array',
             'relationships' => 'array',
             'display_field' => 'array',
             'views' => 'array',
@@ -45,6 +45,6 @@ class Table extends Model
      */
     public function fields(): array
     {
-        return array_merge($this->display_field, $this->schema);
+        return array_merge($this->display_field, $this->fields);
     }
 }

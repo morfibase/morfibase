@@ -67,7 +67,7 @@ class CreateTable extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {   
         BuilderHelper::generateRandomColumnName($data['display_field']);
-        BuilderHelper::generateRandomColumnName($data['schema']);
+        BuilderHelper::generateRandomColumnName($data['fields']);
 
         return $data;
     }

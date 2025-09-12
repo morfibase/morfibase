@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Table as TableModel; 
 use Illuminate\Support\Facades\DB;
 
+use function Illuminate\Log\log;
+
 class GenericTable extends Component implements HasForms, HasTable, HasActions
 {
     use InteractsWithTable;
@@ -132,7 +134,7 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                 $data1 = GenericModel::genericQuery($tableBId)
                                     ->where($tableAForeignKeyName, '=', $record->id)
                                     ->get();
-                
+
                                 $data['relationship_table_data'][][$relationshipBTable] = $data1->toArray();                        
                             }
                         }
@@ -140,28 +142,72 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                         return $data;
                     })
                     ->schema(FormBuilder::generate($this->record))
-                    ->action(function(array $data, GenericModel $record) use ($tableRecordName) {
-                        DB::transaction(function () use ($data, $record, $tableRecordName) {
+                    ->action(function(array $data, GenericModel $record) use ($tableRecordName, $relationships) {
+                        DB::transaction(function () use ($data, $record, $tableRecordName, $relationships) {
                             try {
+                                // Creating/Updating/Deleting relationships data
                                 if(isset($data['relationship_table_data'])) {
                                     foreach($data['relationship_table_data'] as $relationshipData) {
                                         foreach($relationshipData as $tableName => $tableData) {
                                             $tableId = TableHelper::tableNameToUuid($tableName);
+                                            $foreignKeyName = TableHelper::uuidToForeignKeyName($this->record->id);
+                                            $existingRelationshipRecords = GenericModel::genericQuery($tableId)
+                                                ->where($foreignKeyName, '=', $record->id)
+                                                ->get();
+
+                                            $submittedIds = collect($tableData)
+                                                ->pluck('id')
+                                                ->filter()
+                                                ->toArray();
+
+                                            /**
+                                             * Edge case: If the user removes all the existing record relationships, then the tableData will be empty
+                                             * so we will never get to the code bellow to delete the data. Thus we must do it here.
+                                             */
+                                            if(empty($tableData)) {
+                                                foreach($existingRelationshipRecords as $existingRecord) {
+                                                    $existingRecord->delete();
+                                                }
+                                            }
 
                                             foreach($tableData as $fields) {
                                                 $isNew = isset($fields['id']) == false;
+                                                $fields[TableHelper::uuidToForeignKeyName($this->record->id)] = $record->id;
 
-                                                // The record exists in the db and we now have to update it
-                                                if($isNew == false) {
+                                                /**
+                                                 * Create a new record
+                                                 */
+                                                if($isNew) {
+                                                    GenericModel::genericQuery($tableId)
+                                                        ->create($fields);
+                                                } 
+                                                /**
+                                                 * Update record
+                                                 */
+                                                else {
                                                     GenericModel::genericQuery($tableId)
                                                         ->where('id', '=', $fields['id'])
                                                         ->update($fields);
+                                                }
+
+                                                /**
+                                                 * Delete record
+                                                 */
+                                                $idsToDelete = $existingRelationshipRecords
+                                                    ->pluck('id')
+                                                    ->diff($submittedIds);
+                                  
+                                                if (!empty($idsToDelete)) {
+                                                    GenericModel::genericQuery($tableId)
+                                                        ->whereIn('id', $idsToDelete)
+                                                        ->delete();
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 
+                                unset($data['relationship_table_data']);
                                 $record->update($data);
                             } catch (Exception $e) {
                                 Log::error([

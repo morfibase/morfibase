@@ -45,7 +45,7 @@ class EditTable extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        BuilderHelper::generateRandomColumnName($data['schema']);
+        BuilderHelper::generateRandomColumnName($data['fields']);
 
         /**
          * We need to remove the belongs to relationships as we are not interested in displaying these to the user,
@@ -68,7 +68,7 @@ class EditTable extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $fields = array_merge($data['display_field'], $data['schema']);
+        $fields = array_merge($data['display_field'], $data['fields']);
         $this->tableName = TableHelper::uuidToTableName($this->record->id);
         $oldSchema = $this->record->fields();
         $oldSchemaColumnNames = [];
@@ -80,7 +80,7 @@ class EditTable extends EditRecord
         // Look for fields that are present in the $oldSchema but not present in the $data (since they were deleted)
         $newSchemaColumnNames = array_map(fn($field) => $field['data']['db_column_name'], $fields);
         $this->toDeleteDbColumns = array_diff($oldSchemaColumnNames, $newSchemaColumnNames);
-        $this->toAddDbColumns = BuilderHelper::generateRandomColumnName($data['schema'], $oldSchemaColumnNames);
+        $this->toAddDbColumns = BuilderHelper::generateRandomColumnName($data['fields'], $oldSchemaColumnNames);
 
         /**
          * Because we removed the belongsTo relationship when we filled the relationships form we now must add it

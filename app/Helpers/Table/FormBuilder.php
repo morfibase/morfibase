@@ -76,6 +76,7 @@ class FormBuilder
                     $relationshipTableData[] = Repeater::make($relationshipBTable)
                         ->label($tableB->name)
                         ->default([])
+                        ->reorderable(false)
                         ->maxItems(fn() => $relationshipType == 'hasOne' ? 1 : null)
                         ->schema($repeaterFields);
                 }

@@ -44,7 +44,7 @@ class TableForm
 
                                 Builder::make('display_field')
                                     ->live()
-                                    ->label('Schema')
+                                    ->label('Fields')
                                     ->deletable(false)
                                     ->reorderable(false)
                                     ->helperText('This field will be shown whenever this record is referenced in another table or dropdown.')
@@ -63,7 +63,7 @@ class TableForm
                                         ],
                                     ]),
 
-                                Builder::make('schema')
+                                Builder::make('fields')
                                     ->live()
                                     ->hiddenLabel()
                                     ->collapsible()
