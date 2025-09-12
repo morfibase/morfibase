@@ -118,16 +118,16 @@ class FieldBlock
                             ]),
                     ]),
 
-                Section::make('View settings')
-                    ->collapsible()
-                    ->compact()
-                    ->collapsed()
-                    ->schema([
-                        Toggle::make('view.table.sortable'),
-                        Toggle::make('view.table.searchable'),
-                        Toggle::make('view.table.toggleable'),
-                        TextInput::make('view.table.tooltip')
-                    ])
+                // Section::make('View settings')
+                //     ->collapsible()
+                //     ->compact()
+                //     ->collapsed()
+                //     ->schema([
+                //         Toggle::make('view.table.sortable'),
+                //         Toggle::make('view.table.searchable'),
+                //         Toggle::make('view.table.toggleable'),
+                //         TextInput::make('view.table.tooltip')
+                //     ])
             ]);
     }
 

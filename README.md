@@ -47,6 +47,15 @@ Install dependencies
   npm install
 ```
 
+Installing the app
+
+```bash
+  php artisan morfibase:install
+```
+
+Then follow the instructions displayed in the terminal.
+
+
 Start the server
 
 ```bash
@@ -56,12 +65,4 @@ Start the server
 ```bash
   npm run dev
 ```
-
-Installing the app
-
-```bash
-  php artisan morfibase:install
-```
-
-Then follow the instructions displayed in the terminal.
 
