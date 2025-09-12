@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\Tables\Schemas;
 
 use App\Helpers\Table\TableHelper;
-use App\Helpers\Table\SchemaBlock;
+use App\Helpers\Table\FieldBlock;
+use App\Helpers\Table\ViewBlock;
 use App\Models\Table;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -42,6 +43,7 @@ class TableForm
                                     ->required(),
 
                                 Builder::make('display_field')
+                                    ->live()
                                     ->label('Schema')
                                     ->deletable(false)
                                     ->reorderable(false)
@@ -50,7 +52,7 @@ class TableForm
                                     ->required()
                                     ->maxItems(1)
                                     ->blocks([
-                                        SchemaBlock::textInput(true)
+                                        FieldBlock::textInput(true)
                                             ->label('Display field'),
                                     ])
                                     ->blockNumbers(false)
@@ -62,16 +64,15 @@ class TableForm
                                     ]),
 
                                 Builder::make('schema')
+                                    ->live()
                                     ->hiddenLabel()
                                     ->collapsible()
+                                    ->addActionLabel('Add new field')
                                     ->blocks([
-                                        SchemaBlock::textInput(),
-                                        SchemaBlock::select(),
+                                        FieldBlock::textInput(),
+                                        FieldBlock::select(),
                                     ])
                             ]),
-
-                        Tab::make('Views')
-                            ->schema([]),
 
                         Tab::make('Relationships')
                             ->schema([

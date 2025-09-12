@@ -2,22 +2,34 @@
 
 use App\Filament\Resources\Tables\Pages\CreateTable;
 use App\Filament\Resources\Tables\Pages\EditCollection;
+use App\Filament\Resources\Tables\Pages\EditTable;
 use App\Filament\Resources\Tables\TableResource;
 use App\Helpers\Table\TableHelper;
 use App\Models\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Filament\Forms\Components\Builder;
 
 use function Pest\Livewire\livewire;
 
 // Create
 it('one to one relationship saved corectly in the relationship json field as well as migrated correctly', function () {
+    $undoBuilderFake = Builder::fake();
+
     /**
      * We must check if the one to one relationship has both a "hasOne" as well as "belongsTo" relation.
      */
     $profile = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Profile',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -25,6 +37,14 @@ it('one to one relationship saved corectly in the relationship json field as wel
     $client = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Client',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                [
                     'id' => null,
@@ -46,26 +66,39 @@ it('one to one relationship saved corectly in the relationship json field as wel
     /**
      * Check if the data was saved correctly from a migration point of view
      */
-    expect(count($clientTableSchema))->toEqual(1);
-    expect(count($profileTableSchema))->toEqual(2);
+    expect(count($clientTableSchema))->toEqual(2);
+    expect(count($profileTableSchema))->toEqual(3);
+    // dd($clientTableSchema, $profileTableSchema);
     
     expect($clientTableSchema[0]->name)->toEqual('id');
-    expect($clientTableSchema[0]->type)->toEqual('INTEGER');
+    expect($clientTableSchema[0]->type)->toEqual('varchar');
     expect($clientTableSchema[0]->notnull)->toEqual(1);
     expect($clientTableSchema[0]->dflt_value)->toBeNull();
     expect($clientTableSchema[0]->pk)->toEqual(1);
 
+    expect($clientTableSchema[1]->name)->toEqual($clientCollection->display_field[0]['data']['db_column_name']);
+    expect($clientTableSchema[1]->type)->toEqual('TEXT');
+    expect($clientTableSchema[1]->notnull)->toEqual(0);
+    expect($clientTableSchema[1]->dflt_value)->toBeNull();
+    expect($clientTableSchema[1]->pk)->toEqual(0);
+
     expect($profileTableSchema[0]->name)->toEqual('id');
-    expect($profileTableSchema[0]->type)->toEqual('INTEGER');
+    expect($profileTableSchema[0]->type)->toEqual('varchar');
     expect($profileTableSchema[0]->notnull)->toEqual(1);
     expect($profileTableSchema[0]->dflt_value)->toBeNull();
     expect($profileTableSchema[0]->pk)->toEqual(1);
 
-    expect($profileTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($profileTableSchema[1]->type)->toEqual('INTEGER');
-    expect($profileTableSchema[1]->notnull)->toEqual(1);
+    expect($profileTableSchema[1]->name)->toEqual($profileCollection->display_field[0]['data']['db_column_name']);
+    expect($profileTableSchema[1]->type)->toEqual('TEXT');
+    expect($profileTableSchema[1]->notnull)->toEqual(0);
     expect($profileTableSchema[1]->dflt_value)->toBeNull();
     expect($profileTableSchema[1]->pk)->toEqual(0);
+
+    expect($profileTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($profileTableSchema[2]->type)->toEqual('varchar');
+    expect($profileTableSchema[2]->notnull)->toEqual(0);
+    expect($profileTableSchema[2]->dflt_value)->toBeNull();
+    expect($profileTableSchema[2]->pk)->toEqual(0);
 
     $clientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
     $profileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
@@ -101,13 +134,25 @@ it('one to one relationship saved corectly in the relationship json field as wel
     expect($profileRelationships[0]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($profileCollection->id));
     expect($profileRelationships[0]['relationship_type'])->toEqual('belongsTo');
     expect($profileRelationships[0]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
+
+    $undoBuilderFake();
 });
 
 // Update
 it('one to one relationship update by adding a new relationship on a table that already has one thus json fields update accordingly and migrations run correctly too', function () {
+    $undoBuilderFake = Builder::fake();
+
     $profile = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Profile',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -115,6 +160,14 @@ it('one to one relationship update by adding a new relationship on a table that 
     $newProfile = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'NewProfile',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -122,6 +175,14 @@ it('one to one relationship update by adding a new relationship on a table that 
     $client = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Client',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                 [
                     'id' => null,
@@ -135,8 +196,16 @@ it('one to one relationship update by adding a new relationship on a table that 
         ->assertHasNoFormErrors();
 
     // Add a new one to one relationship then save
-    $client = livewire(EditCollection::class, ['record' => $client->record->id])
+    $client = livewire(EditTable::class, ['record' => $client->record->id])
         ->fillForm([
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                 // Add a new one
                 [
@@ -160,40 +229,58 @@ it('one to one relationship update by adding a new relationship on a table that 
     $updatedClientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
     $updatedProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
     $updatedNewProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($newProfileCollection->id) . ')');
-
-    expect(count($updatedClientTableSchema))->toEqual(1);
-    expect(count($updatedProfileTableSchema))->toEqual(2);
-    expect(count($updatedNewProfileTableSchema))->toEqual(2);
+    // dd($updatedClientTableSchema, $updatedProfileTableSchema, $updatedNewProfileTableSchema);
+    expect(count($updatedClientTableSchema))->toEqual(2);
+    expect(count($updatedProfileTableSchema))->toEqual(3);
+    expect(count($updatedNewProfileTableSchema))->toEqual(3);
     
     expect($updatedClientTableSchema[0]->name)->toEqual('id');
-    expect($updatedClientTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedClientTableSchema[0]->type)->toEqual('varchar');
     expect($updatedClientTableSchema[0]->notnull)->toEqual(1);
     expect($updatedClientTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedClientTableSchema[0]->pk)->toEqual(1);
 
+    expect($updatedClientTableSchema[1]->name)->toEqual($clientCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedClientTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedClientTableSchema[1]->notnull)->toEqual(0);
+    expect($updatedClientTableSchema[1]->dflt_value)->toBeNull();
+    expect($updatedClientTableSchema[1]->pk)->toEqual(0);
+
     expect($updatedProfileTableSchema[0]->name)->toEqual('id');
-    expect($updatedProfileTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedProfileTableSchema[0]->type)->toEqual('varchar');
     expect($updatedProfileTableSchema[0]->notnull)->toEqual(1);
     expect($updatedProfileTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedProfileTableSchema[0]->pk)->toEqual(1);
 
+    expect($updatedProfileTableSchema[1]->name)->toEqual($profileCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedProfileTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedProfileTableSchema[1]->notnull)->toEqual(0);
+    expect($updatedProfileTableSchema[1]->dflt_value)->toBeNull();
+    expect($updatedProfileTableSchema[1]->pk)->toEqual(0);
+
+    expect($updatedProfileTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($updatedProfileTableSchema[2]->type)->toEqual('varchar');
+    expect($updatedProfileTableSchema[2]->notnull)->toEqual(0);
+    expect($updatedProfileTableSchema[2]->dflt_value)->toBeNull();
+    expect($updatedProfileTableSchema[2]->pk)->toEqual(0);
+
     expect($updatedNewProfileTableSchema[0]->name)->toEqual('id');
-    expect($updatedNewProfileTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedNewProfileTableSchema[0]->type)->toEqual('varchar');
     expect($updatedNewProfileTableSchema[0]->notnull)->toEqual(1);
     expect($updatedNewProfileTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedNewProfileTableSchema[0]->pk)->toEqual(1);
 
-    expect($updatedProfileTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($updatedProfileTableSchema[1]->type)->toEqual('INTEGER');
-    expect($updatedProfileTableSchema[1]->notnull)->toEqual(1);
-    expect($updatedProfileTableSchema[1]->dflt_value)->toBeNull();
-    expect($updatedProfileTableSchema[1]->pk)->toEqual(0);
-
-    expect($updatedNewProfileTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($updatedNewProfileTableSchema[1]->type)->toEqual('INTEGER');
-    expect($updatedNewProfileTableSchema[1]->notnull)->toEqual(1);
+    expect($updatedNewProfileTableSchema[1]->name)->toEqual($newProfileCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedNewProfileTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedNewProfileTableSchema[1]->notnull)->toEqual(0);
     expect($updatedNewProfileTableSchema[1]->dflt_value)->toBeNull();
     expect($updatedNewProfileTableSchema[1]->pk)->toEqual(0);
+
+    expect($updatedNewProfileTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($updatedNewProfileTableSchema[2]->type)->toEqual('varchar');
+    expect($updatedNewProfileTableSchema[2]->notnull)->toEqual(0);
+    expect($updatedNewProfileTableSchema[2]->dflt_value)->toBeNull();
+    expect($updatedNewProfileTableSchema[2]->pk)->toEqual(0);
 
     $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
     $updatedProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
@@ -253,16 +340,28 @@ it('one to one relationship update by adding a new relationship on a table that 
     expect($newProfileRelationships[0]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($newProfileCollection->id));
     expect($newProfileRelationships[0]['relationship_type'])->toEqual('belongsTo');
     expect($newProfileRelationships[0]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
+
+    $undoBuilderFake();
 });
 
 // Delete
 it('one to one relationship deleted thus json fields update accordingly and migrations run correctly too', function () {
+    $undoBuilderFake = Builder::fake();
+
     /**
      * We must check if the one to one relationship has both a "hasOne" as well as "belongsTo" relation.
      */
     $profile = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Profile',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -270,6 +369,14 @@ it('one to one relationship deleted thus json fields update accordingly and migr
     $controlProfile = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'ControlProfile',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -277,6 +384,14 @@ it('one to one relationship deleted thus json fields update accordingly and migr
     $client = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Client',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                 /**
                  * This will be used to test the delete functionality
@@ -325,38 +440,43 @@ it('one to one relationship deleted thus json fields update accordingly and migr
     /**
      * Check if the migrations ran correctly
      */
-
     $updatedClientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
     $updatedProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedProfileCollection->id) . ')');
     $updatedControlProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedControlProfileCollection->id) . ')');
 
-    expect(count($updatedClientTableSchema))->toEqual(1);
-    expect(count($updatedProfileTableSchema))->toEqual(1);
-    expect(count($updatedControlProfileTableSchema))->toEqual(2);
+    expect(count($updatedClientTableSchema))->toEqual(2);
+    expect(count($updatedProfileTableSchema))->toEqual(2);
+    expect(count($updatedControlProfileTableSchema))->toEqual(3);
     
     expect($updatedClientTableSchema[0]->name)->toEqual('id');
-    expect($updatedClientTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedClientTableSchema[0]->type)->toEqual('varchar');
     expect($updatedClientTableSchema[0]->notnull)->toEqual(1);
     expect($updatedClientTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedClientTableSchema[0]->pk)->toEqual(1);
 
     expect($updatedProfileTableSchema[0]->name)->toEqual('id');
-    expect($updatedProfileTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedProfileTableSchema[0]->type)->toEqual('varchar');
     expect($updatedProfileTableSchema[0]->notnull)->toEqual(1);
     expect($updatedProfileTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedProfileTableSchema[0]->pk)->toEqual(1);
 
     expect($updatedControlProfileTableSchema[0]->name)->toEqual('id');
-    expect($updatedControlProfileTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedControlProfileTableSchema[0]->type)->toEqual('varchar');
     expect($updatedControlProfileTableSchema[0]->notnull)->toEqual(1);
     expect($updatedControlProfileTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedControlProfileTableSchema[0]->pk)->toEqual(1);
 
-    expect($updatedControlProfileTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($updatedControlProfileTableSchema[1]->type)->toEqual('INTEGER');
-    expect($updatedControlProfileTableSchema[1]->notnull)->toEqual(1);
+    expect($updatedControlProfileTableSchema[1]->name)->toEqual($updatedControlProfileCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedControlProfileTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedControlProfileTableSchema[1]->notnull)->toEqual(0);
     expect($updatedControlProfileTableSchema[1]->dflt_value)->toBeNull();
     expect($updatedControlProfileTableSchema[1]->pk)->toEqual(0);
+
+    expect($updatedControlProfileTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($updatedControlProfileTableSchema[2]->type)->toEqual('varchar');
+    expect($updatedControlProfileTableSchema[2]->notnull)->toEqual(0);
+    expect($updatedControlProfileTableSchema[2]->dflt_value)->toBeNull();
+    expect($updatedControlProfileTableSchema[2]->pk)->toEqual(0);
           
     $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
     $updatedProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedProfileCollection->id) . ')');
@@ -396,4 +516,6 @@ it('one to one relationship deleted thus json fields update accordingly and migr
     expect($updatedControlProfileCollection->relationships[0]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($controlProfileCollection->id));
     expect($updatedControlProfileCollection->relationships[0]['relationship_type'])->toEqual($controlProfileCollection->relationships[0]['relationship_type']);
     expect($updatedControlProfileCollection->relationships[0]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
+
+    $undoBuilderFake();
 });

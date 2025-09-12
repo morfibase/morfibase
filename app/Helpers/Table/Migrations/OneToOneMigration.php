@@ -38,7 +38,7 @@ class OneToOneMigration
     {
         Schema::table($tableA, function (Blueprint $table) use ($tableB) {
             $columnName = TableHelper::tableNameToForeignKeyName($tableB);
-            $table->dropForeignUuid([$columnName]);
+            $table->dropForeign([$columnName]);
             $table->dropUnique([$columnName]);
             $table->dropColumn($columnName);
         });

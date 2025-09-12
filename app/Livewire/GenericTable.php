@@ -42,6 +42,79 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                 // ...
             ])
             ->recordActions([
+                Action::make('View')
+                    ->icon('heroicon-m-eye')
+                    ->accessSelectedRecords()
+                    ->disabledSchema()
+                    ->modalSubmitAction(false)
+                    ->fillForm(function ($record) use ($relationships) {
+                        $data = $record->toArray();
+                        $data['relationship_table_data'] = [];
+                        foreach($relationships as $relationship) {
+                            $relationshipATable = $relationship['relationship_a_table'];
+                            $relationshipBTable = $relationship['relationship_b_table'];
+                            $tableAId = TableHelper::tableNameToUuid($relationshipATable);
+                            $tableBId = TableHelper::tableNameToUuid($relationshipBTable);
+                            $tableAForeignKeyName = TableHelper::uuidToForeignKeyName($tableAId);
+
+                            if(in_array($relationship['relationship_type'], ['hasOne', 'hasMany'])) {
+                                $data1 = GenericModel::genericQuery($tableBId)
+                                    ->where($tableAForeignKeyName, '=', $record->id)
+                                    ->get();
+                
+                                $data['relationship_table_data'][][$relationshipBTable] = $data1->toArray();                        
+                            }
+                        }
+
+                        return $data;
+                    })
+                    ->schema(FormBuilder::generate($this->record))
+                    ->action(function(array $data, GenericModel $record) use ($tableRecordName) {
+                        DB::transaction(function () use ($data, $record, $tableRecordName) {
+                            try {
+                                if(isset($data['relationship_table_data'])) {
+                                    foreach($data['relationship_table_data'] as $relationshipData) {
+                                        foreach($relationshipData as $tableName => $tableData) {
+                                            $tableId = TableHelper::tableNameToUuid($tableName);
+
+                                            foreach($tableData as $fields) {
+                                                $isNew = isset($fields['id']) == false;
+
+                                                // The record exists in the db and we now have to update it
+                                                if($isNew == false) {
+                                                    GenericModel::genericQuery($tableId)
+                                                        ->where('id', '=', $fields['id'])
+                                                        ->update($fields);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                $record->update($data);
+                            } catch (Exception $e) {
+                                Log::error([
+                                    'message' => $e->getMessage(),
+                                    'code' => $e->getCode(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine(),
+                                ]);
+
+                                Notification::make()
+                                    ->title("{$tableRecordName} update failed")
+                                    ->danger()
+                                    ->send();
+                                
+                                return;
+                            }
+
+                            Notification::make()
+                                ->title("{$tableRecordName} updated successfully")
+                                ->success()
+                                ->send();
+                        });                 
+                    }),
+
                 Action::make('Edit')
                     ->icon('heroicon-m-pencil-square')
                     ->accessSelectedRecords()

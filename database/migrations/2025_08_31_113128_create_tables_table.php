@@ -15,8 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->json('display_field');
-            $table->json('schema');
-            $table->json('views');
+            $table->json('fields');
             $table->json('relationships')->nullable();
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();

@@ -32,7 +32,6 @@ class ViewTable extends ViewRecord
                         $schema = $this->record->fields();
                         $attributes['id'] = (string) Str::uuid();
                         $toCreateRelationshipRecords = [];
-                        
                         /**
                          * Add relation related fields to the attributes array
                          */

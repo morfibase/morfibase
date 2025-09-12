@@ -5,7 +5,7 @@ namespace App\Helpers\Table\Callbacks;
 use App\Models\GenericModel;
 use Filament\Forms\Components\Field;
 
-class Callbacks
+class FormCallbacks
 {
     public static function textInput(): array
     {
@@ -24,7 +24,7 @@ class Callbacks
             'minValue' => fn(Field $input, array $params = []) => $input->minValue(...$params),
             'maxValue' => fn(Field $input, array $params = []) => $input->maxValue(...$params),
             'required' => fn(Field $input, array $params = []) => $input->required(...$params),
-            'copyable' => fn(Field $input, array $params = []) => $input->copyable(fn(?GenericModel $genericModel) => $genericModel !== null),
+            'copyable' => fn(Field $input, array $params = []) => $input->copyable(...$params),
             'revealable' => fn(Field $input, array $params = []) => $input->revealable(...$params),
             'autocapitalize' => fn(Field $input, array $params = []) => $input->autocapitalize(...$params),
             'prefix' => fn(Field $input, array $params = []) => $input->prefix(...$params),

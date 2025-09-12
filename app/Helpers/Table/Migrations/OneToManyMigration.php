@@ -20,7 +20,7 @@ class OneToManyMigration
     {
         Schema::table($tableA, function (Blueprint $table) use ($tableB) {
             $columnName = TableHelper::tableNameToForeignKeyName($tableB);
-            $table->foreignId($columnName)->nullable();
+            $table->foreignUuid($columnName)->nullable();
             $table->foreign($columnName)
                 ->references('id')
                 ->on(DB::raw('`' . $tableB . '`'))

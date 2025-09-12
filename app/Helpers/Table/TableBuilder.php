@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Table;
 
+use App\Helpers\Table\Callbacks\TableCallbacks;
 use App\Helpers\Table\Constants\Constants;
 use App\Models\Table;
 use App\Models\GenericModel;
@@ -18,19 +19,52 @@ class TableBuilder
 {
     public static function generate(Table $table): array
     {
-        $form = [];
-        $schema = $table->schema;
+        $classReferences = Constants::TABLE_CLASS_REFERENCES;
+        $tableColumns = [];
+        // Display field + schema
+        $schema = $table->fields();
+        $relationships = $table->relationships;
         $formToTableMap = Constants::FORM_TO_TABLE_MAP;
+        
         foreach ($schema as $field) {
-            $formFieldType = $field['type'];
-            $tableFieldType = $formToTableMap[$formFieldType];
-            $fieldData = $field['data'];
+            $fieldType = $field['type'] ?? null;
 
-            $form[] = self::$tableFieldType($fieldData);
+            if($fieldType != null) {
+                $columnType = $formToTableMap[$fieldType];
+            } else {
+                $columnType = null;
+            }
+            $columnData = $field['data'] ?? null;
+            $columnLabel = $field['data']['label'] ?? null;
+            $dbColumnName = $field['data']['db_column_name'] ?? null;
+
+            if($columnType && $columnData) {
+                $tableColumns[] = self::genericColumn($dbColumnName, $columnLabel, $columnType, $classReferences[$columnType], $columnData);
+            }
         }
 
-        return $form;
+        return $tableColumns;
     }
+
+    public static function genericColumn(string $dbColumnName, string $columnLabel, string $columnType, string $reference, array $columnData)
+    {
+        $columnTypeCallbacks = TableCallbacks::{$columnType}();
+        $input = $reference::make($dbColumnName ?? BuilderHelper::getNameFromLabel($columnLabel))
+            ->label($columnLabel);
+
+        foreach($columnData['form'] as $option => $params) {
+            if(isset($columnTypeCallbacks[$option]) && isset($params)) {
+                $columnTypeCallbacks[$option]($input, [$params]);
+            }
+        }
+
+        return $input;
+    }
+
+
+
+
+
 
     public static function sharedProperties(array $field, Column &$column)
     {

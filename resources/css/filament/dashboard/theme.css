@@ -18,3 +18,7 @@
         }
     }
 }
+
+.fi-sidebar-nav {
+    @apply gap-1;
+}

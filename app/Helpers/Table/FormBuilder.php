@@ -2,7 +2,7 @@
 
 namespace App\Helpers\Table;
 
-use App\Helpers\Table\Callbacks\Callbacks;
+use App\Helpers\Table\Callbacks\FormCallbacks;
 use App\Helpers\Table\Constants\Constants;
 use App\Helpers\Table\Enums\FormAction;
 use App\Models\GenericModel;
@@ -19,25 +19,17 @@ class FormBuilder
     {
         $classReferences = Constants::FORM_CLASS_REFERENCES;
         $form = [];
-        $schema = $table->schema;
+        $schema = $table->fields();
         $relationships = $table->relationships;
-        $displayField = $table->display_field;
-
-        foreach ($displayField as $field) {
-            $fieldType = $field['type'] ?? null;
-            $fieldData = $field['data'] ?? null;
-
-            if($fieldType && $fieldData) {
-                $form[] = self::genericField($fieldType, $classReferences[$fieldType], $fieldData, $formAction)->required();
-            }
-        }
 
         foreach ($schema as $field) {
             $fieldType = $field['type'] ?? null;
-            $fieldData = $field['data'] ?? null;
+            $fieldData = $field['data']['form'] ?? null;
+            $fieldLabel = $field['data']['label'] ?? null;
+            $dbColumnName = $field['data']['db_column_name'] ?? null;
 
-            if($fieldType && $fieldData) {
-                $form[] = self::genericField($fieldType, $classReferences[$fieldType], $fieldData, $formAction);
+            if($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
+                $form[] = self::genericField($dbColumnName, $fieldLabel, $fieldType, $classReferences[$fieldType], $fieldData, $formAction);
             }
         }
 
@@ -56,26 +48,29 @@ class FormBuilder
                     ->get()
                     ->pluck($tableB->display_field[0]['data']['db_column_name'], 'id');
 
-                $form[] = self::genericField('select', $classReferences['select'], [
-                    'db_column_name' => TableHelper::tableNameToForeignKeyName($relationshipBTable),
-                    'label' => $tableB->name,
-                    'options' => $options,
-                    'native' => false
-                ], $formAction);
+                if($options->count() > 0) {
+                    $form[] = self::genericField(TableHelper::tableNameToForeignKeyName($relationshipBTable), $tableB->name, 'select', $classReferences['select'], [
+                        'options' => $options,
+                        'native' => false
+                    ], $formAction);
+                }
             } else if(in_array($relationshipType, ['hasOne', 'hasMany'])) {
                 $fields = $tableB->fields();
-
+  
                 // Render fields from the relationship table
                 foreach ($fields as $field) {
                     $fieldType = $field['type'] ?? null;
-                    $fieldData = $field['data'] ?? null;
+                    $fieldData = $field['data']['form'] ?? null;
+                    $fieldLabel = $field['data']['label'] ?? null;
+                    $dbColumnName = $field['data']['db_column_name'] ?? null;
+
                     $repeaterFields = [];
 
                     // This has to be set to the value of the new table A id (the new record that we create)
                     $repeaterFields[] = Hidden::make($tableAForeignKeyName)->default(null);
 
-                    if($fieldType && $fieldData) {
-                        $repeaterFields[] = self::genericField($fieldType, $classReferences[$fieldType], $fieldData, $formAction);
+                    if($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
+                        $repeaterFields[] = self::genericField($dbColumnName, $fieldLabel, $fieldType, $classReferences[$fieldType], $fieldData, $formAction);
                     }
                     
                     $relationshipTableData[] = Repeater::make($relationshipBTable)
@@ -84,26 +79,26 @@ class FormBuilder
                         ->maxItems(fn() => $relationshipType == 'hasOne' ? 1 : null)
                         ->schema($repeaterFields);
                 }
-            }
-        }
 
-        if(empty($relationshipTableData) == false) {
-            $form[] = Repeater::make('relationship_table_data')
-                ->hiddenLabel()
-                ->reorderable(false)
-                ->deletable(false)
-                ->addable(false)
-                ->schema($relationshipTableData);
+                if(empty($relationshipTableData) == false) {
+                    $form[] = Repeater::make('relationship_table_data')
+                        ->hiddenLabel()
+                        ->reorderable(false)
+                        ->deletable(false)
+                        ->addable(false)
+                        ->schema($relationshipTableData);
+                }
+            }
         }
 
         return $form;
     }
 
-    public static function genericField(string $fieldType, string $reference, array $fieldData, FormAction $formAction)
+    public static function genericField(string $dbColumnName, string $fieldLabel, string $fieldType, string $reference, array $fieldData, FormAction $formAction)
     {
-        $inputTypeCallbacks = Callbacks::{$fieldType}();
-
-        $input = $reference::make($fieldData['db_column_name'] ?? BuilderHelper::getNameFromLabel($fieldData['label']));
+        $inputTypeCallbacks = FormCallbacks::{$fieldType}();
+        $input = $reference::make($dbColumnName ?? BuilderHelper::getNameFromLabel($fieldLabel))
+            ->label($fieldLabel);
 
         foreach($fieldData as $option => $params) {
             if(isset($inputTypeCallbacks[$option]) && isset($params)) {

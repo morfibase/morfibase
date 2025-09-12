@@ -6,17 +6,28 @@ use App\Filament\Resources\Tables\Pages\EditTable;
 use App\Helpers\Table\TableHelper;
 use App\Models\Table;
 use Illuminate\Support\Facades\DB;
+use Filament\Forms\Components\Builder;
 
 use function Pest\Livewire\livewire;
 
 // Create
 it('one to many relationship saved corectly in the relationship json field as well as migrated correctly', function () {
+    $undoBuilderFake = Builder::fake();
+
     /**
-     * We must check if the one to one relationship has both a "hasOne" as well as "belongsTo" relation.
+     * We must check if the one to one relationship has both a "hasMany" as well as "belongsTo" relation.
      */
     $invoice = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Invoice',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -24,6 +35,14 @@ it('one to many relationship saved corectly in the relationship json field as we
     $client = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Client',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                [
                     'id' => null,
@@ -45,26 +64,38 @@ it('one to many relationship saved corectly in the relationship json field as we
     /**
      * Check if the data was saved correctly from a migration point of view
      */
-    expect(count($clientTableSchema))->toEqual(1);
-    expect(count($invoiceTableSchema))->toEqual(2);
+    expect(count($clientTableSchema))->toEqual(2);
+    expect(count($invoiceTableSchema))->toEqual(3);
 
     expect($clientTableSchema[0]->name)->toEqual('id');
-    expect($clientTableSchema[0]->type)->toEqual('INTEGER');
+    expect($clientTableSchema[0]->type)->toEqual('varchar');
     expect($clientTableSchema[0]->notnull)->toEqual(1);
     expect($clientTableSchema[0]->dflt_value)->toBeNull();
     expect($clientTableSchema[0]->pk)->toEqual(1);
 
+    expect($clientTableSchema[1]->name)->toEqual($clientCollection->display_field[0]['data']['db_column_name']);
+    expect($clientTableSchema[1]->type)->toEqual('TEXT');
+    expect($clientTableSchema[1]->notnull)->toEqual(0);
+    expect($clientTableSchema[1]->dflt_value)->toBeNull();
+    expect($clientTableSchema[1]->pk)->toEqual(0);
+
     expect($invoiceTableSchema[0]->name)->toEqual('id');
-    expect($invoiceTableSchema[0]->type)->toEqual('INTEGER');
+    expect($invoiceTableSchema[0]->type)->toEqual('varchar');
     expect($invoiceTableSchema[0]->notnull)->toEqual(1);
     expect($invoiceTableSchema[0]->dflt_value)->toBeNull();
     expect($invoiceTableSchema[0]->pk)->toEqual(1);
 
-    expect($invoiceTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($invoiceTableSchema[1]->type)->toEqual('INTEGER');
-    expect($invoiceTableSchema[1]->notnull)->toEqual(1);
+    expect($invoiceTableSchema[1]->name)->toEqual($invoiceCollection->display_field[0]['data']['db_column_name']);
+    expect($invoiceTableSchema[1]->type)->toEqual('TEXT');
+    expect($invoiceTableSchema[1]->notnull)->toEqual(0);
     expect($invoiceTableSchema[1]->dflt_value)->toBeNull();
     expect($invoiceTableSchema[1]->pk)->toEqual(0);
+
+    expect($invoiceTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($invoiceTableSchema[2]->type)->toEqual('varchar');
+    expect($invoiceTableSchema[2]->notnull)->toEqual(0);
+    expect($invoiceTableSchema[2]->dflt_value)->toBeNull();
+    expect($invoiceTableSchema[2]->pk)->toEqual(0);
 
     $clientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
     $invoiceTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($invoiceCollection->id) . ')');
@@ -99,13 +130,25 @@ it('one to many relationship saved corectly in the relationship json field as we
     expect($invoiceRelationships[0]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($invoiceCollection->id));
     expect($invoiceRelationships[0]['relationship_type'])->toEqual('belongsTo');
     expect($invoiceRelationships[0]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
+
+    $undoBuilderFake;
 });
 
 // Update
 it('one to many relationship update by adding a new relationship on a table that already has one thus json fields update accordingly and migrations run correctly too', function () {
+    $undoBuilderFake = Builder::fake();
+    
     $invoice = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Invoice',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -113,6 +156,14 @@ it('one to many relationship update by adding a new relationship on a table that
     $newInvoice = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'NewInvoice',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -120,6 +171,14 @@ it('one to many relationship update by adding a new relationship on a table that
     $client = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Client',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                 [
                     'id' => null,
@@ -135,6 +194,14 @@ it('one to many relationship update by adding a new relationship on a table that
     // Add a new one to one relationship then save
     $client = livewire(EditTable::class, ['record' => $client->record->id])
         ->fillForm([
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                 // Add a new one
                 [
@@ -159,39 +226,57 @@ it('one to many relationship update by adding a new relationship on a table that
     $updatedInvoiceTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($invoiceCollection->id) . ')');
     $updatedNewInvoiceTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($newInvoiceCollection->id) . ')');
 
-    expect(count($updatedClientTableSchema))->toEqual(1);
-    expect(count($updatedInvoiceTableSchema))->toEqual(2);
-    expect(count($updatedNewInvoiceTableSchema))->toEqual(2);
-    
+    expect(count($updatedClientTableSchema))->toEqual(2);
+    expect(count($updatedInvoiceTableSchema))->toEqual(3);
+    expect(count($updatedNewInvoiceTableSchema))->toEqual(3);
+
     expect($updatedClientTableSchema[0]->name)->toEqual('id');
-    expect($updatedClientTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedClientTableSchema[0]->type)->toEqual('varchar');
     expect($updatedClientTableSchema[0]->notnull)->toEqual(1);
     expect($updatedClientTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedClientTableSchema[0]->pk)->toEqual(1);
+    
+    expect($updatedClientTableSchema[1]->name)->toEqual($clientCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedClientTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedClientTableSchema[1]->notnull)->toEqual(0);
+    expect($updatedClientTableSchema[1]->dflt_value)->toBeNull();
+    expect($updatedClientTableSchema[1]->pk)->toEqual(0);
 
     expect($updatedInvoiceTableSchema[0]->name)->toEqual('id');
-    expect($updatedInvoiceTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedInvoiceTableSchema[0]->type)->toEqual('varchar');
     expect($updatedInvoiceTableSchema[0]->notnull)->toEqual(1);
     expect($updatedInvoiceTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedInvoiceTableSchema[0]->pk)->toEqual(1);
 
+    expect($updatedInvoiceTableSchema[1]->name)->toEqual($invoiceCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedInvoiceTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedInvoiceTableSchema[1]->notnull)->toEqual(0);
+    expect($updatedInvoiceTableSchema[1]->dflt_value)->toBeNull();
+    expect($updatedInvoiceTableSchema[1]->pk)->toEqual(0);
+
+    expect($updatedInvoiceTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($updatedInvoiceTableSchema[2]->type)->toEqual('varchar');
+    expect($updatedInvoiceTableSchema[2]->notnull)->toEqual(0);
+    expect($updatedInvoiceTableSchema[2]->dflt_value)->toBeNull();
+    expect($updatedInvoiceTableSchema[2]->pk)->toEqual(0);
+
     expect($updatedNewInvoiceTableSchema[0]->name)->toEqual('id');
-    expect($updatedNewInvoiceTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedNewInvoiceTableSchema[0]->type)->toEqual('varchar');
     expect($updatedNewInvoiceTableSchema[0]->notnull)->toEqual(1);
     expect($updatedNewInvoiceTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedNewInvoiceTableSchema[0]->pk)->toEqual(1);
 
-    expect($updatedNewInvoiceTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($updatedNewInvoiceTableSchema[1]->type)->toEqual('INTEGER');
-    expect($updatedNewInvoiceTableSchema[1]->notnull)->toEqual(1);
+    expect($updatedNewInvoiceTableSchema[1]->name)->toEqual($newInvoiceCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedNewInvoiceTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedNewInvoiceTableSchema[1]->notnull)->toEqual(0);
     expect($updatedNewInvoiceTableSchema[1]->dflt_value)->toBeNull();
     expect($updatedNewInvoiceTableSchema[1]->pk)->toEqual(0);
 
-    expect($updatedNewInvoiceTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($updatedNewInvoiceTableSchema[1]->type)->toEqual('INTEGER');
-    expect($updatedNewInvoiceTableSchema[1]->notnull)->toEqual(1);
-    expect($updatedNewInvoiceTableSchema[1]->dflt_value)->toBeNull();
-    expect($updatedNewInvoiceTableSchema[1]->pk)->toEqual(0);
+    expect($updatedNewInvoiceTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($updatedNewInvoiceTableSchema[2]->type)->toEqual('varchar');
+    expect($updatedNewInvoiceTableSchema[2]->notnull)->toEqual(0);
+    expect($updatedNewInvoiceTableSchema[2]->dflt_value)->toBeNull();
+    expect($updatedNewInvoiceTableSchema[2]->pk)->toEqual(0);
 
     $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
     $updatedInvoiceTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($invoiceCollection->id) . ')');
@@ -251,16 +336,28 @@ it('one to many relationship update by adding a new relationship on a table that
     expect($newInvoiceRelationships[0]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($newInvoiceCollection->id));
     expect($newInvoiceRelationships[0]['relationship_type'])->toEqual('belongsTo');
     expect($newInvoiceRelationships[0]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
+
+    $undoBuilderFake();
 });
 
 // Delete
 it('one to many relationship deleted thus json fields update accordingly and migrations run correctly too', function () {
+    $undoBuilderFake = Builder::fake();
+
     /**
      * We must check if the one to one relationship has both a "hasMany" as well as "belongsTo" relation.
      */
     $invoice = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Invoice',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -268,6 +365,14 @@ it('one to many relationship deleted thus json fields update accordingly and mig
     $controlInvoice = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'ControlInvoice',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -275,6 +380,14 @@ it('one to many relationship deleted thus json fields update accordingly and mig
     $client = livewire(CreateTable::class)
         ->fillForm([
             'name' => 'Client',
+            'display_field' => [
+                [
+                    'data' => [
+                        'label' => 'DisplayFieldName',
+                    ],
+                    'type' => 'textInput'
+                ]
+            ],
             'relationships' => [
                 /**
                  * This will be used to test the delete functionality
@@ -282,7 +395,7 @@ it('one to many relationship deleted thus json fields update accordingly and mig
                 [
                     'id' => null,
                     'relationship_a_table' => null,
-                    'relationship_type' => 'hasOne',
+                    'relationship_type' => 'hasMany',
                     'relationship_b_table' => TableHelper::uuidToTableName($invoice->record->id)
                 ],
 
@@ -292,7 +405,7 @@ it('one to many relationship deleted thus json fields update accordingly and mig
                 [
                     'id' => null,
                     'relationship_a_table' => null,
-                    'relationship_type' => 'hasOne',
+                    'relationship_type' => 'hasMany',
                     'relationship_b_table' => TableHelper::uuidToTableName($controlInvoice->record->id)
                 ],
             ]
@@ -327,34 +440,52 @@ it('one to many relationship deleted thus json fields update accordingly and mig
     $updatedClientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
     $updatedInvoiceTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedInvoiceCollection->id) . ')');
     $updatedControlInvoiceTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedControlInvoiceCollection->id) . ')');
-
-    expect(count($updatedClientTableSchema))->toEqual(1);
-    expect(count($updatedInvoiceTableSchema))->toEqual(1);
-    expect(count($updatedControlInvoiceTableSchema))->toEqual(2);
     
+    expect(count($updatedClientTableSchema))->toEqual(2);
+    expect(count($updatedInvoiceTableSchema))->toEqual(2);
+    expect(count($updatedControlInvoiceTableSchema))->toEqual(3);
+
     expect($updatedClientTableSchema[0]->name)->toEqual('id');
-    expect($updatedClientTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedClientTableSchema[0]->type)->toEqual('varchar');
     expect($updatedClientTableSchema[0]->notnull)->toEqual(1);
     expect($updatedClientTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedClientTableSchema[0]->pk)->toEqual(1);
 
+    expect($updatedClientTableSchema[1]->name)->toEqual($updatedClientCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedClientTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedClientTableSchema[1]->notnull)->toEqual(0);
+    expect($updatedClientTableSchema[1]->dflt_value)->toBeNull();
+    expect($updatedClientTableSchema[1]->pk)->toEqual(0);
+
     expect($updatedInvoiceTableSchema[0]->name)->toEqual('id');
-    expect($updatedInvoiceTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedInvoiceTableSchema[0]->type)->toEqual('varchar');
     expect($updatedInvoiceTableSchema[0]->notnull)->toEqual(1);
     expect($updatedInvoiceTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedInvoiceTableSchema[0]->pk)->toEqual(1);
 
+    expect($updatedInvoiceTableSchema[1]->name)->toEqual($updatedInvoiceCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedInvoiceTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedInvoiceTableSchema[1]->notnull)->toEqual(0);
+    expect($updatedInvoiceTableSchema[1]->dflt_value)->toBeNull();
+    expect($updatedInvoiceTableSchema[1]->pk)->toEqual(0);
+
     expect($updatedControlInvoiceTableSchema[0]->name)->toEqual('id');
-    expect($updatedControlInvoiceTableSchema[0]->type)->toEqual('INTEGER');
+    expect($updatedControlInvoiceTableSchema[0]->type)->toEqual('varchar');
     expect($updatedControlInvoiceTableSchema[0]->notnull)->toEqual(1);
     expect($updatedControlInvoiceTableSchema[0]->dflt_value)->toBeNull();
     expect($updatedControlInvoiceTableSchema[0]->pk)->toEqual(1);
 
-    expect($updatedControlInvoiceTableSchema[1]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
-    expect($updatedControlInvoiceTableSchema[1]->type)->toEqual('INTEGER');
-    expect($updatedControlInvoiceTableSchema[1]->notnull)->toEqual(1);
+    expect($updatedControlInvoiceTableSchema[1]->name)->toEqual($updatedControlInvoiceCollection->display_field[0]['data']['db_column_name']);
+    expect($updatedControlInvoiceTableSchema[1]->type)->toEqual('TEXT');
+    expect($updatedControlInvoiceTableSchema[1]->notnull)->toEqual(0);
     expect($updatedControlInvoiceTableSchema[1]->dflt_value)->toBeNull();
     expect($updatedControlInvoiceTableSchema[1]->pk)->toEqual(0);
+
+    expect($updatedControlInvoiceTableSchema[2]->name)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
+    expect($updatedControlInvoiceTableSchema[2]->type)->toEqual('varchar');
+    expect($updatedControlInvoiceTableSchema[2]->notnull)->toEqual(0);
+    expect($updatedControlInvoiceTableSchema[2]->dflt_value)->toBeNull();
+    expect($updatedControlInvoiceTableSchema[2]->pk)->toEqual(0);
           
     $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
     $updatedInvoiceTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedInvoiceCollection->id) . ')');
@@ -394,4 +525,6 @@ it('one to many relationship deleted thus json fields update accordingly and mig
     expect($updatedControlInvoiceCollection->relationships[0]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($controlInvoiceCollection->id));
     expect($updatedControlInvoiceCollection->relationships[0]['relationship_type'])->toEqual($controlInvoiceCollection->relationships[0]['relationship_type']);
     expect($updatedControlInvoiceCollection->relationships[0]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
+
+    $undoBuilderFake();
 });

@@ -19,12 +19,17 @@ class Constants
     ];
 
     public const TABLE_CLASS_REFERENCES = [
-        'textInputColumn' => 'Filament\Tables\Columns\TextInputColumn',
-        'selectColumn' => 'Filament\Tables\Columns\SelectColumn'
+        // 'textInputColumn' => 'Filament\Tables\Columns\TextInputColumn',
+        // 'selectColumn' => 'Filament\Tables\Columns\SelectColumn',
+
+        'textColumn' => 'Filament\Tables\Columns\TextColumn',
     ];
 
     public const FORM_TO_TABLE_MAP = [
-        'textInput' => 'textInputColumn',
-        'select' => 'selectColumn',
+        // 'textInput' => 'textInputColumn',
+        // 'select' => 'selectColumn',
+
+        'textInput' => 'textColumn',
+        'select' => 'textColumn',
     ];
 }

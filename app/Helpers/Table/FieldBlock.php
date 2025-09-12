@@ -21,18 +21,8 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Filament\Schemas\Components\Text;
 
-class SchemaBlock
+class FieldBlock
 {
-    public static function sharedTable()
-    {
-        return [
-            Toggle::make('sortable'),
-            Toggle::make('searchable'),
-            Toggle::make('toggleable'),
-            TextInput::make('tooltip')
-        ];
-    }
-
     public static function textInput(bool $isDisplayField = false): Block
     {
         return Block::make('textInput')
@@ -40,41 +30,38 @@ class SchemaBlock
             ->schema([
                 Hidden::make('db_column_name'),
 
-                Section::make('General settings')
-                    ->collapsible()
-                    ->compact()
-                    ->schema([
-                        TextInput::make('label')
-                            ->required(),
-
-                        Toggle::make('copyable'),
-                    ]),
+                TextInput::make('label')
+                    ->required(),
 
                 Section::make('Form settings')
                     ->collapsible()
                     ->compact()
                     ->collapsed()
                     ->schema([
+                        Toggle::make('form.copyable'),
+
                         Fieldset::make('Validation')
                             ->columns(2)
                             ->schema([
-                                Toggle::make('required')
-                                    ->disabled($isDisplayField == true)
-                                    ->default(true)
-                                    ->helperText(fn() => $isDisplayField ? 'This field serves as the Display Field and cannot be empty.' : '')
+                                Hidden::make('form.required')
+                                    ->hidden($isDisplayField == false)
+                                    ->default(true),
+
+                                Toggle::make('form.required')
+                                    ->hidden($isDisplayField == true)
                                     ->columnSpan(2),
 
-                                Select::make('inputType')
+                                Select::make('form.inputType')
                                     ->live()
                                     ->searchable()
                                     ->options(Constants::INPUT_TYPES)
                                     ->columnSpan(2),
 
-                                Toggle::make('revealable')
+                                Toggle::make('form.revealable')
                                     ->hidden(fn(Get $get) => in_array($get('inputType'), ['password']) == false)
                                     ->columnSpan(2),
 
-                                TextInput::make('step')
+                                TextInput::make('form.step')
                                     ->numeric()
                                     ->default(1)
                                     ->minValue(1)
@@ -82,24 +69,24 @@ class SchemaBlock
                                     ->required()
                                     ->columnSpan(2),
 
-                                TextInput::make('minLength')
+                                TextInput::make('form.minLength')
                                     ->live()
                                     ->numeric()
                                     ->minValue(1)
                                     ->columnSpan(1),
 
-                                TextInput::make('maxLength')
+                                TextInput::make('form.maxLength')
                                     ->numeric()
                                     ->minValue(fn(Get $get) => $get('minLength'))
                                     ->columnSpan(1),
 
-                                TextInput::make('minValue')
+                                TextInput::make('form.minValue')
                                     ->live()
                                     ->numeric()
                                     ->hidden(fn(Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
                                     ->columnSpan(1),
 
-                                TextInput::make('maxValue')
+                                TextInput::make('form.maxValue')
                                     ->numeric()
                                     ->hidden(fn(Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
                                     ->minValue(fn(Get $get) => $get('minValue'))
@@ -109,7 +96,7 @@ class SchemaBlock
                         Fieldset::make('Default values')
                             ->columns(1)
                             ->schema([
-                                TagsInput::make('datalist')
+                                TagsInput::make('form.datalist')
                                     ->placeholder('Write the new option and hit enter')
                                     ->helperText('Provide autocomplete options to users when they use the text input.')
                                     ->label('Autocomplete options'),
@@ -118,26 +105,29 @@ class SchemaBlock
                         Fieldset::make('Input enhancements')
                             ->columns(2)
                             ->schema([
-                                Toggle::make('autocapitalize')
+                                Toggle::make('form.autocapitalize')
                                     ->columnSpanFull()
                                     ->label('Autocapitalize words')
                                     ->helperText('Controls whether inputted text is automatically capitalized.'),
 
-                                TextInput::make('prefix')
+                                TextInput::make('form.prefix')
                                     ->columnSpan(1),
 
-                                TextInput::make('suffix')
+                                TextInput::make('form.suffix')
                                     ->columnSpan(1)
                             ]),
                     ]),
 
-                Section::make('Table settings')
+                Section::make('View settings')
                     ->collapsible()
-                    ->collapsed()
                     ->compact()
+                    ->collapsed()
                     ->schema([
-                        ...self::sharedTable()
-                    ]),
+                        Toggle::make('view.table.sortable'),
+                        Toggle::make('view.table.searchable'),
+                        Toggle::make('view.table.toggleable'),
+                        TextInput::make('view.table.tooltip')
+                    ])
             ]);
     }
 
@@ -162,7 +152,7 @@ class SchemaBlock
                     // ->collapsed()
                     ->compact()
                     ->schema([    
-                        TagsInput::make('options')
+                        TagsInput::make('form.options')
                             ->live()
                             ->placeholder('Write the new option and hit enter')
                             ->helperText('Provide options to users when they use the select.')
@@ -182,21 +172,21 @@ class SchemaBlock
                         Fieldset::make('Validation')
                             ->columns(2)
                             ->schema([
-                                Toggle::make('required')
+                                Toggle::make('form.required')
                                     ->columnSpan(2),
 
-                                Toggle::make('multiple')
+                                Toggle::make('form.multiple')
                                     ->live()
                                     ->columnSpan(2),
 
-                                TextInput::make('minItems')
+                                TextInput::make('form.minItems')
                                     ->hidden(fn (Get $get) => $get('multiple') == false)
                                     ->live()
                                     ->numeric()
                                     ->minValue(1)
                                     ->columnSpan(1),
 
-                                TextInput::make('maxItems')
+                                TextInput::make('form.maxItems')
                                     ->hidden(fn (Get $get) => $get('multiple') == false)
                                     ->numeric()
                                     ->minValue(fn(Get $get) => $get('minItems'))
@@ -206,10 +196,10 @@ class SchemaBlock
                         Fieldset::make('Input enhancements')
                             ->columns(2)
                             ->schema([
-                                TextInput::make('prefix')
+                                TextInput::make('form.prefix')
                                     ->columnSpan(1),
 
-                                TextInput::make('suffix')
+                                TextInput::make('form.suffix')
                                     ->columnSpan(1)
                             ]),
                     ]),
