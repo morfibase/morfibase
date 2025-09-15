@@ -39,6 +39,7 @@ class FormCallbacks
             'options' => fn(Field $input, array $params = []) => $input->options(...$params),
             'native' => fn(Field $input, array $params = []) => $input->native(false),
             'required' => fn(Field $input, array $params = []) => $input->required(...$params),
+            'searchable' => fn(Field $input, array $params = []) => $input->searchable(...$params),
             'multiple' => fn(Field $input, array $params = []) => $input->multiple(...$params),
             'minItems' => fn(Field $input, array $params = []) => $input->minItems(...$params),
             'maxItems' => fn(Field $input, array $params = []) => $input->maxItems(...$params),

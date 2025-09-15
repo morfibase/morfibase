@@ -52,9 +52,11 @@ class TableBuilder
         $input = $reference::make($dbColumnName ?? BuilderHelper::getNameFromLabel($columnLabel))
             ->label($columnLabel);
 
-        foreach($columnData['form'] as $option => $params) {
-            if(isset($columnTypeCallbacks[$option]) && isset($params)) {
-                $columnTypeCallbacks[$option]($input, [$params]);
+        if(isset($columnData['view']['table'])) {
+            foreach($columnData['view']['table'] as $option => $params) {
+                if(isset($columnTypeCallbacks[$option]) && isset($params)) {
+                    $columnTypeCallbacks[$option]($input, [$params]);
+                }
             }
         }
 

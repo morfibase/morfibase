@@ -36,8 +36,10 @@ class OneToOneMigration
      */
     public static function down(string $tableA, string $tableB)
     {
-        Schema::table($tableA, function (Blueprint $table) use ($tableB) {
+        Schema::table($tableA, function (Blueprint $table) use ($tableA, $tableB) {
             $columnName = TableHelper::tableNameToForeignKeyName($tableB);
+            $foreignKeyName = MigrationHelper::generateForeignKeyName($tableA, $tableB, $columnName);
+
             $table->dropForeign([$columnName]);
             $table->dropUnique([$columnName]);
             $table->dropColumn($columnName);

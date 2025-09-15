@@ -66,3 +66,10 @@ Start the server
   npm run dev
 ```
 
+Navigate to yourdomain.com/login and use your credentials to login.
+
+To add new users run the following command.
+
+```bash
+  php artisan morfibase:user
+```

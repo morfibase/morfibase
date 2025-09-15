@@ -21,23 +21,39 @@ class InstallAppCommand extends Command
      */
     protected $description = 'Installs the app.';
 
+    protected array $options;
+
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        // Create .env file
-        $envExample = base_path('.env.example');
         $envFile = base_path('.env');
+        $createEnv = true;
+        
+        if (file_exists($envFile)) {
+            $createEnv = $this->confirm('.env file already exists, do you want to override it?');
+        }
 
-        if (!file_exists($envFile)) {
+        if($createEnv) {
+            $database = $this->choice(
+                'Which database do you want to use? (Default: SQLite)',
+                [
+                    'SQLite', 
+                ],
+                0 // Defaults to SQLite
+            );
+
+            $envExample = match ($database) {
+                'SQLite' => base_path('.env.sqlite.example'),
+                'MySQL' => base_path('.env.mysql.example')
+            };
+
             copy($envExample, $envFile);
-            $this->info('.env file create from .env.example');
+            $this->info('.env file created');
             $this->call('key:generate', [
                 '--force' => true,
             ]);
-        } else {
-            $this->warn('.env file already exists, skipping');
         }
 
         // Ask user for app details
@@ -75,7 +91,7 @@ class InstallAppCommand extends Command
             chmod($dbPath, 0600);
             $this->info('SQLite database created');
         } else {
-            $this->warn('SQLite database already exists, skipping');
+            $this->warn("\n\nSQLite database already exists, skipping");
         }
 
         $pdo = new PDO('sqlite:' . $dbPath);
@@ -92,6 +108,15 @@ class InstallAppCommand extends Command
 
         // Create user
         $this->info("\n\nCreate your first account.");
-        $this->call('make:filament-user');
+
+        $name = $this->ask('Name');
+        $email = $this->ask('Email');
+        $password = $this->secret('Password');
+
+        $this->call('make:filament-user', [
+            '--name' => $name,
+            '--email' => $email,
+            '--password' => $password
+        ]);
     }
 }

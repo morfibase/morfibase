@@ -18,10 +18,12 @@ class OneToManyMigration
      */
     public static function up(string $tableA, string $tableB)
     {
-        Schema::table($tableA, function (Blueprint $table) use ($tableB) {
+        Schema::table($tableA, function (Blueprint $table) use ($tableA, $tableB) {
             $columnName = TableHelper::tableNameToForeignKeyName($tableB);
+            $foreignKeyName = MigrationHelper::generateForeignKeyName($tableA, $tableB, $columnName);
+
             $table->foreignUuid($columnName)->nullable();
-            $table->foreign($columnName)
+            $table->foreign($columnName, $foreignKeyName)
                 ->references('id')
                 ->on(DB::raw('`' . $tableB . '`'))
                 ->onDelete('cascade');
@@ -36,8 +38,10 @@ class OneToManyMigration
      */
     public static function down(string $tableA, string $tableB)
     {
-        Schema::table($tableA, function (Blueprint $table) use ($tableB) {
+        Schema::table($tableA, function (Blueprint $table) use ($tableA, $tableB) {
             $columnName = TableHelper::tableNameToForeignKeyName($tableB);
+            $foreignKeyName = MigrationHelper::generateForeignKeyName($tableA, $tableB, $columnName);
+
             $table->dropForeign([$columnName]);
             $table->dropColumn($columnName);
         });

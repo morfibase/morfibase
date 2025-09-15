@@ -440,7 +440,7 @@ it('one to many relationship deleted thus json fields update accordingly and mig
     $updatedClientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
     $updatedInvoiceTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedInvoiceCollection->id) . ')');
     $updatedControlInvoiceTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedControlInvoiceCollection->id) . ')');
-    
+
     expect(count($updatedClientTableSchema))->toEqual(2);
     expect(count($updatedInvoiceTableSchema))->toEqual(2);
     expect(count($updatedControlInvoiceTableSchema))->toEqual(3);

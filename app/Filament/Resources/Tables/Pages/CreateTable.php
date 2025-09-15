@@ -36,7 +36,7 @@ class CreateTable extends CreateRecord
                 $table->uuid('id')->primary();
 
                 foreach($schema as $field) {
-                    $table->text($field['data']['db_column_name'])->nullable();
+                    $table->longText($field['data']['db_column_name'])->nullable();
                 }
             });
 

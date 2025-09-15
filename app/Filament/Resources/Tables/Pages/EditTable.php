@@ -127,7 +127,7 @@ class EditTable extends EditRecord
 
                 // Add new columns
                 foreach($this->toAddDbColumns as $column) {
-                    $table->text($column)->nullable();
+                    $table->longText($column)->nullable();
                 }
             });
 

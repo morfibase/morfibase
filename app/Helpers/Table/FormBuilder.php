@@ -51,12 +51,14 @@ class FormBuilder
                 if($options->count() > 0) {
                     $form[] = self::genericField(TableHelper::tableNameToForeignKeyName($relationshipBTable), $tableB->name, 'select', $classReferences['select'], [
                         'options' => $options,
-                        'native' => false
+                        'native' => false,
+                        'searchable' => true
                     ], $formAction);
                 }
             } else if(in_array($relationshipType, ['hasOne', 'hasMany'])) {
                 $fields = $tableB->fields();
-  
+                $repeaterFields = [];
+
                 // Render fields from the relationship table
                 foreach ($fields as $field) {
                     $fieldType = $field['type'] ?? null;
@@ -64,7 +66,6 @@ class FormBuilder
                     $fieldLabel = $field['data']['label'] ?? null;
                     $dbColumnName = $field['data']['db_column_name'] ?? null;
 
-                    $repeaterFields = [];
 
                     // This has to be set to the value of the new table A id (the new record that we create)
                     $repeaterFields[] = Hidden::make($tableAForeignKeyName)->default(null);
@@ -72,14 +73,14 @@ class FormBuilder
                     if($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
                         $repeaterFields[] = self::genericField($dbColumnName, $fieldLabel, $fieldType, $classReferences[$fieldType], $fieldData, $formAction);
                     }
-                    
-                    $relationshipTableData[] = Repeater::make($relationshipBTable)
-                        ->label($tableB->name)
-                        ->default([])
-                        ->reorderable(false)
-                        ->maxItems(fn() => $relationshipType == 'hasOne' ? 1 : null)
-                        ->schema($repeaterFields);
                 }
+
+                $relationshipTableData[] = Repeater::make($relationshipBTable)
+                    ->label($tableB->name)
+                    ->default([])
+                    ->reorderable(false)
+                    ->maxItems(fn() => $relationshipType == 'hasOne' ? 1 : null)
+                    ->schema($repeaterFields);
 
                 if(empty($relationshipTableData) == false) {
                     $form[] = Repeater::make('relationship_table_data')
