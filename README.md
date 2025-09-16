@@ -3,6 +3,9 @@
 
 A lightweight open source no-code platform to create internal tools and custom databases for any business.
 
+- [Docs](https://docs.morfibase.com/docs/category/getting-started)
+- [Screenshots](https://docs.morfibase.com/docs/getting-started/screenshots)
+
 > [!WARNING]  
 > MorfiBase is under active development, so you might encounter bugs and compatibility issues when upgrading. We plan to keep version 0.x until we are confident in delivering a fully stable, battle-tested app with version 1.x
 
