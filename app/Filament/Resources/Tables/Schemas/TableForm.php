@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Tables\Schemas;
 
-use App\Helpers\Table\TableHelper;
 use App\Helpers\Table\FieldBlock;
-use App\Helpers\Table\ViewBlock;
+use App\Helpers\Table\TableHelper;
 use App\Models\Table;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -15,10 +14,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Schemas\Schema;
 
 class TableForm
 {
@@ -36,7 +34,7 @@ class TableForm
                             ->schema([
                                 Hidden::make('user_id')
                                     ->live()
-                                    ->default(fn() => $user->id),
+                                    ->default(fn () => $user->id),
 
                                 TextInput::make('name')
                                     ->live()
@@ -71,7 +69,7 @@ class TableForm
                                     ->blocks([
                                         FieldBlock::textInput(),
                                         FieldBlock::select(),
-                                    ])
+                                    ]),
                             ]),
 
                         Tab::make('Relationships')
@@ -85,23 +83,23 @@ class TableForm
                                         Hidden::make('id'),
                                         Hidden::make('relationship_a_table'),
 
-                                        Text::make(function(Get $get) {
-                                                $text = '';
-                                                $collectionName = $get('../../name');
-                                                $relationshipTypes = $get('relationship_type');
-                                                
-                                                if($collectionName != null) {
-                                                    $text = 'Each ' . lcfirst($collectionName);
-                                                } else {
-                                                    $text = 'This table';
-                                                }
+                                        Text::make(function (Get $get) {
+                                            $text = '';
+                                            $collectionName = $get('../../name');
+                                            $relationshipTypes = $get('relationship_type');
 
-                                                if(in_array($relationshipTypes, ['hasOne', 'hasMany'])) {
-                                                    $text .= ' has';
-                                                }
+                                            if ($collectionName != null) {
+                                                $text = 'Each '.lcfirst($collectionName);
+                                            } else {
+                                                $text = 'This table';
+                                            }
 
-                                                return $text;
-                                            })
+                                            if (in_array($relationshipTypes, ['hasOne', 'hasMany'])) {
+                                                $text .= ' has';
+                                            }
+
+                                            return $text;
+                                        })
                                             ->extraAttributes(['class' => 'text-[.95rem] dark:text-white text-black']),
 
                                         Select::make('relationship_type')
@@ -135,7 +133,7 @@ class TableForm
 
                                                 $tables = $tables
                                                     ->get()
-                                                    ->map(function($item) {
+                                                    ->map(function ($item) {
                                                         $item->name = strtolower($item->name);
                                                         $item->id = TableHelper::uuidToTableName($item->id);
 
@@ -150,16 +148,15 @@ class TableForm
                                         Text::make(function (Get $get) {
                                             $relationshipTypes = $get('relationship_type');
 
-                                            if(in_array($relationshipTypes, ['hasOne'])) {
+                                            if (in_array($relationshipTypes, ['hasOne'])) {
                                                 return ' table.';
-                                            } else if($relationshipTypes == 'hasMany') {
+                                            } elseif ($relationshipTypes == 'hasMany') {
                                                 return ' tables.';
                                             }
                                         })->extraAttributes(['class' => 'text-[.95rem] dark:text-white text-black']),
                                     ]),
-                            ])
-                    ])
-
+                            ]),
+                    ]),
 
             ]);
     }
@@ -169,7 +166,7 @@ class TableForm
         $hasValue = $get('relationship_type');
         $class = ['shadow-none'];
 
-        if($hasValue == null) {
+        if ($hasValue == null) {
             $class[] = 'italic';
         }
 

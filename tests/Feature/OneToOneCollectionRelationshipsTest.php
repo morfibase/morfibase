@@ -1,14 +1,12 @@
 <?php
 
 use App\Filament\Resources\Tables\Pages\CreateTable;
-use App\Filament\Resources\Tables\Pages\EditCollection;
 use App\Filament\Resources\Tables\Pages\EditTable;
 use App\Filament\Resources\Tables\TableResource;
 use App\Helpers\Table\TableHelper;
 use App\Models\Table;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Filament\Forms\Components\Builder;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Livewire\livewire;
 
@@ -27,8 +25,8 @@ it('one to one relationship saved corectly in the relationship json field as wel
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
         ])
         ->call('create')
@@ -42,17 +40,17 @@ it('one to one relationship saved corectly in the relationship json field as wel
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
             'relationships' => [
-               [
+                [
                     'id' => null,
                     'relationship_a_table' => null,
                     'relationship_type' => 'hasOne',
-                    'relationship_b_table' => TableHelper::uuidToTableName($profile->record->id)
-               ]
-            ]
+                    'relationship_b_table' => TableHelper::uuidToTableName($profile->record->id),
+                ],
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -60,8 +58,8 @@ it('one to one relationship saved corectly in the relationship json field as wel
     $clientCollection = Table::where('name', '=', 'Client')->first();
     $profileCollection = Table::where('name', '=', 'Profile')->first();
 
-    $clientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
-    $profileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
+    $clientTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($clientCollection->id).')');
+    $profileTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($profileCollection->id).')');
 
     /**
      * Check if the data was saved correctly from a migration point of view
@@ -69,7 +67,7 @@ it('one to one relationship saved corectly in the relationship json field as wel
     expect(count($clientTableSchema))->toEqual(2);
     expect(count($profileTableSchema))->toEqual(3);
     // dd($clientTableSchema, $profileTableSchema);
-    
+
     expect($clientTableSchema[0]->name)->toEqual('id');
     expect($clientTableSchema[0]->type)->toEqual('varchar');
     expect($clientTableSchema[0]->notnull)->toEqual(1);
@@ -100,12 +98,12 @@ it('one to one relationship saved corectly in the relationship json field as wel
     expect($profileTableSchema[2]->dflt_value)->toBeNull();
     expect($profileTableSchema[2]->pk)->toEqual(0);
 
-    $clientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
-    $profileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
+    $clientTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($clientCollection->id).')');
+    $profileTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($profileCollection->id).')');
 
     expect(count($clientTableForeignKeyList))->toEqual(0);
     expect(count($profileTableForeignKeyList))->toEqual(1);
-    
+
     expect($profileTableForeignKeyList[0]->table)->toEqual(TableHelper::uuidToTableName($clientCollection->id));
     expect($profileTableForeignKeyList[0]->from)->toEqual(TableHelper::uuidToForeignKeyName($clientCollection->id));
     expect($profileTableForeignKeyList[0]->to)->toEqual('id');
@@ -150,8 +148,8 @@ it('one to one relationship update by adding a new relationship on a table that 
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
         ])
         ->call('create')
@@ -165,8 +163,8 @@ it('one to one relationship update by adding a new relationship on a table that 
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
         ])
         ->call('create')
@@ -180,17 +178,17 @@ it('one to one relationship update by adding a new relationship on a table that 
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
             'relationships' => [
                 [
                     'id' => null,
                     'relationship_a_table' => null,
                     'relationship_type' => 'hasOne',
-                    'relationship_b_table' => TableHelper::uuidToTableName($profile->record->id)
+                    'relationship_b_table' => TableHelper::uuidToTableName($profile->record->id),
                 ],
-            ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -203,8 +201,8 @@ it('one to one relationship update by adding a new relationship on a table that 
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
             'relationships' => [
                 // Add a new one
@@ -212,7 +210,7 @@ it('one to one relationship update by adding a new relationship on a table that 
                     'id' => null,
                     'relationship_a_table' => null,
                     'relationship_type' => 'hasOne',
-                    'relationship_b_table' => TableHelper::uuidToTableName($newProfile->record->id)
+                    'relationship_b_table' => TableHelper::uuidToTableName($newProfile->record->id),
                 ],
             ],
         ])
@@ -225,15 +223,14 @@ it('one to one relationship update by adding a new relationship on a table that 
     /**
      * Check if the migrations ran correctly
      */
-
-    $updatedClientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
-    $updatedProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
-    $updatedNewProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($newProfileCollection->id) . ')');
+    $updatedClientTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($clientCollection->id).')');
+    $updatedProfileTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($profileCollection->id).')');
+    $updatedNewProfileTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($newProfileCollection->id).')');
     // dd($updatedClientTableSchema, $updatedProfileTableSchema, $updatedNewProfileTableSchema);
     expect(count($updatedClientTableSchema))->toEqual(2);
     expect(count($updatedProfileTableSchema))->toEqual(3);
     expect(count($updatedNewProfileTableSchema))->toEqual(3);
-    
+
     expect($updatedClientTableSchema[0]->name)->toEqual('id');
     expect($updatedClientTableSchema[0]->type)->toEqual('varchar');
     expect($updatedClientTableSchema[0]->notnull)->toEqual(1);
@@ -282,9 +279,9 @@ it('one to one relationship update by adding a new relationship on a table that 
     expect($updatedNewProfileTableSchema[2]->dflt_value)->toBeNull();
     expect($updatedNewProfileTableSchema[2]->pk)->toEqual(0);
 
-    $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($clientCollection->id) . ')');
-    $updatedProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($profileCollection->id) . ')');
-    $updatedNewProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($newProfileCollection->id) . ')');
+    $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($clientCollection->id).')');
+    $updatedProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($profileCollection->id).')');
+    $updatedNewProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($newProfileCollection->id).')');
 
     expect(count($updatedClientTableForeignKeyList))->toEqual(0);
     expect(count($updatedProfileTableForeignKeyList))->toEqual(1);
@@ -326,7 +323,7 @@ it('one to one relationship update by adding a new relationship on a table that 
     expect($clientRelationships[1]['relationship_a_table'])->toEqual(TableHelper::uuidToTableName($clientCollection->id));
     expect($clientRelationships[1]['relationship_type'])->toEqual('hasOne');
     expect($clientRelationships[1]['relationship_b_table'])->toEqual(TableHelper::uuidToTableName($newProfileCollection->id));
-    
+
     expect($profileRelationships[0]['id'])->toBeUuid();
 
     // Profile belongs to client
@@ -359,8 +356,8 @@ it('one to one relationship deleted thus json fields update accordingly and migr
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
         ])
         ->call('create')
@@ -374,8 +371,8 @@ it('one to one relationship deleted thus json fields update accordingly and migr
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
         ])
         ->call('create')
@@ -389,8 +386,8 @@ it('one to one relationship deleted thus json fields update accordingly and migr
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
             'relationships' => [
                 /**
@@ -400,7 +397,7 @@ it('one to one relationship deleted thus json fields update accordingly and migr
                     'id' => null,
                     'relationship_a_table' => null,
                     'relationship_type' => 'hasOne',
-                    'relationship_b_table' => TableHelper::uuidToTableName($profile->record->id)
+                    'relationship_b_table' => TableHelper::uuidToTableName($profile->record->id),
                 ],
 
                 /**
@@ -410,9 +407,9 @@ it('one to one relationship deleted thus json fields update accordingly and migr
                     'id' => null,
                     'relationship_a_table' => null,
                     'relationship_type' => 'hasOne',
-                    'relationship_b_table' => TableHelper::uuidToTableName($controlProfile->record->id)
+                    'relationship_b_table' => TableHelper::uuidToTableName($controlProfile->record->id),
                 ],
-            ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -440,14 +437,14 @@ it('one to one relationship deleted thus json fields update accordingly and migr
     /**
      * Check if the migrations ran correctly
      */
-    $updatedClientTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
-    $updatedProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedProfileCollection->id) . ')');
-    $updatedControlProfileTableSchema = DB::select('PRAGMA table_info(' . TableHelper::uuidToTableName($updatedControlProfileCollection->id) . ')');
+    $updatedClientTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($updatedClientCollection->id).')');
+    $updatedProfileTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($updatedProfileCollection->id).')');
+    $updatedControlProfileTableSchema = DB::select('PRAGMA table_info('.TableHelper::uuidToTableName($updatedControlProfileCollection->id).')');
 
     expect(count($updatedClientTableSchema))->toEqual(2);
     expect(count($updatedProfileTableSchema))->toEqual(2);
     expect(count($updatedControlProfileTableSchema))->toEqual(3);
-    
+
     expect($updatedClientTableSchema[0]->name)->toEqual('id');
     expect($updatedClientTableSchema[0]->type)->toEqual('varchar');
     expect($updatedClientTableSchema[0]->notnull)->toEqual(1);
@@ -477,10 +474,10 @@ it('one to one relationship deleted thus json fields update accordingly and migr
     expect($updatedControlProfileTableSchema[2]->notnull)->toEqual(0);
     expect($updatedControlProfileTableSchema[2]->dflt_value)->toBeNull();
     expect($updatedControlProfileTableSchema[2]->pk)->toEqual(0);
-          
-    $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedClientCollection->id) . ')');
-    $updatedProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedProfileCollection->id) . ')');
-    $updatedControlProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list(' . TableHelper::uuidToTableName($updatedControlProfileCollection->id) . ')');
+
+    $updatedClientTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($updatedClientCollection->id).')');
+    $updatedProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($updatedProfileCollection->id).')');
+    $updatedControlProfileTableForeignKeyList = DB::select('PRAGMA foreign_key_list('.TableHelper::uuidToTableName($updatedControlProfileCollection->id).')');
 
     expect(count($updatedClientTableForeignKeyList))->toEqual(0);
     expect(count($updatedProfileTableForeignKeyList))->toEqual(0);

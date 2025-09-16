@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 class BuilderHelper
 {
-    public static function getNameFromLabel($label) 
+    public static function getNameFromLabel($label)
     {
         return strtolower(str_replace(' ', '_', $label));
     }
@@ -15,11 +15,11 @@ class BuilderHelper
     {
         $toBeAddedColumns = [];
 
-        foreach($schema as &$field) {
-            if($field['data']['db_column_name'] == null) {
+        foreach ($schema as &$field) {
+            if ($field['data']['db_column_name'] == null) {
                 do {
-                    $columnName = 'col_' . Str::random(6);
-                } while(in_array($columnName, $usedColumnNames) == true);
+                    $columnName = 'col_'.Str::random(6);
+                } while (in_array($columnName, $usedColumnNames) == true);
 
                 $field['data']['db_column_name'] = $columnName;
                 $usedColumnNames[] = $columnName;

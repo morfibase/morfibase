@@ -4,22 +4,15 @@ namespace App\Helpers\Table;
 
 use App\Helpers\Table\Constants\Constants;
 use App\Models\Table;
-use App\Models\GenericModel;
 use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Fieldset;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Support\Icons\Heroicon;
-use Illuminate\Contracts\Support\Htmlable;
-use Filament\Schemas\Components\Text;
 
 class FieldBlock
 {
@@ -58,14 +51,14 @@ class FieldBlock
                                     ->columnSpan(2),
 
                                 Toggle::make('form.revealable')
-                                    ->hidden(fn(Get $get) => in_array($get('inputType'), ['password']) == false)
+                                    ->hidden(fn (Get $get) => in_array($get('inputType'), ['password']) == false)
                                     ->columnSpan(2),
 
                                 TextInput::make('form.step')
                                     ->numeric()
                                     ->default(1)
                                     ->minValue(1)
-                                    ->hidden(fn(Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
+                                    ->hidden(fn (Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
                                     ->required()
                                     ->columnSpan(2),
 
@@ -77,19 +70,19 @@ class FieldBlock
 
                                 TextInput::make('form.maxLength')
                                     ->numeric()
-                                    ->minValue(fn(Get $get) => $get('minLength'))
+                                    ->minValue(fn (Get $get) => $get('minLength'))
                                     ->columnSpan(1),
 
                                 TextInput::make('form.minValue')
                                     ->live()
                                     ->numeric()
-                                    ->hidden(fn(Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
+                                    ->hidden(fn (Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
                                     ->columnSpan(1),
 
                                 TextInput::make('form.maxValue')
                                     ->numeric()
-                                    ->hidden(fn(Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
-                                    ->minValue(fn(Get $get) => $get('minValue'))
+                                    ->hidden(fn (Get $get) => in_array($get('inputType'), ['numeric', 'integer']) == false)
+                                    ->minValue(fn (Get $get) => $get('minValue'))
                                     ->columnSpan(1),
                             ]),
 
@@ -114,7 +107,7 @@ class FieldBlock
                                     ->columnSpan(1),
 
                                 TextInput::make('form.suffix')
-                                    ->columnSpan(1)
+                                    ->columnSpan(1),
                             ]),
                     ]),
 
@@ -126,7 +119,7 @@ class FieldBlock
                         Toggle::make('view.table.sortable'),
                         Toggle::make('view.table.searchable'),
                         Toggle::make('view.table.toggleable'),
-                    ])
+                    ]),
             ]);
     }
 
@@ -150,17 +143,17 @@ class FieldBlock
                     ->collapsible()
                     // ->collapsed()
                     ->compact()
-                    ->schema([    
+                    ->schema([
                         TagsInput::make('form.options')
                             ->live()
                             ->placeholder('Write the new option and hit enter')
                             ->helperText('Provide options to users when they use the select.')
-                            ->dehydrateStateUsing(fn($state) => collect($state)->mapWithKeys(fn($item) => [$item => $item])->toArray())
+                            ->dehydrateStateUsing(fn ($state) => collect($state)->mapWithKeys(fn ($item) => [$item => $item])->toArray())
                             ->afterStateHydrated(function ($component, $state, ?Table $record) {
                                 if (is_array($state) && $record) {
                                     $component->state(array_values($state)); // convert assoc back to plain array for the UI
                                 }
-                            })
+                            }),
                     ]),
 
                 Section::make('Form settings')
@@ -188,7 +181,7 @@ class FieldBlock
                                 TextInput::make('form.maxItems')
                                     ->hidden(fn (Get $get) => $get('multiple') == false)
                                     ->numeric()
-                                    ->minValue(fn(Get $get) => $get('minItems'))
+                                    ->minValue(fn (Get $get) => $get('minItems'))
                                     ->columnSpan(1),
                             ]),
 
@@ -199,7 +192,7 @@ class FieldBlock
                                     ->columnSpan(1),
 
                                 TextInput::make('form.suffix')
-                                    ->columnSpan(1)
+                                    ->columnSpan(1),
                             ]),
                     ]),
 
@@ -211,7 +204,7 @@ class FieldBlock
                         Toggle::make('view.table.sortable'),
                         Toggle::make('view.table.searchable'),
                         Toggle::make('view.table.toggleable'),
-                    ])
+                    ]),
             ]);
     }
 }

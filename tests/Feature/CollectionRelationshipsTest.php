@@ -16,15 +16,15 @@ it('can create a table with no realtionship', function () {
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
             'relationships' => [
 
-            ]
+            ],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
-        $undoBuilderFake();
+    $undoBuilderFake();
 });

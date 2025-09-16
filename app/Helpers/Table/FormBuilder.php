@@ -9,9 +9,6 @@ use App\Models\GenericModel;
 use App\Models\Table;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
-use Filament\Schemas\Components\Section;
-
-use function Illuminate\Log\log;
 
 class FormBuilder
 {
@@ -28,7 +25,7 @@ class FormBuilder
             $fieldLabel = $field['data']['label'] ?? null;
             $dbColumnName = $field['data']['db_column_name'] ?? null;
 
-            if($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
+            if ($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
                 $form[] = self::genericField($dbColumnName, $fieldLabel, $fieldType, $classReferences[$fieldType], $fieldData, $formAction);
             }
         }
@@ -43,19 +40,19 @@ class FormBuilder
             $relationshipType = $relationship['relationship_type'];
             $relationshipTableData = [];
 
-            if($relationshipType == 'belongsTo') {
+            if ($relationshipType == 'belongsTo') {
                 $options = GenericModel::genericQuery($tableB)
                     ->get()
                     ->pluck($tableB->display_field[0]['data']['db_column_name'], 'id');
 
-                if($options->count() > 0) {
+                if ($options->count() > 0) {
                     $form[] = self::genericField(TableHelper::tableNameToForeignKeyName($relationshipBTable), $tableB->name, 'select', $classReferences['select'], [
                         'options' => $options,
                         'native' => false,
-                        'searchable' => true
+                        'searchable' => true,
                     ], $formAction);
                 }
-            } else if(in_array($relationshipType, ['hasOne', 'hasMany'])) {
+            } elseif (in_array($relationshipType, ['hasOne', 'hasMany'])) {
                 $fields = $tableB->fields();
                 $repeaterFields = [];
 
@@ -66,11 +63,10 @@ class FormBuilder
                     $fieldLabel = $field['data']['label'] ?? null;
                     $dbColumnName = $field['data']['db_column_name'] ?? null;
 
-
                     // This has to be set to the value of the new table A id (the new record that we create)
                     $repeaterFields[] = Hidden::make($tableAForeignKeyName)->default(null);
 
-                    if($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
+                    if ($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
                         $repeaterFields[] = self::genericField($dbColumnName, $fieldLabel, $fieldType, $classReferences[$fieldType], $fieldData, $formAction);
                     }
                 }
@@ -79,10 +75,10 @@ class FormBuilder
                     ->label($tableB->name)
                     ->default([])
                     ->reorderable(false)
-                    ->maxItems(fn() => $relationshipType == 'hasOne' ? 1 : null)
+                    ->maxItems(fn () => $relationshipType == 'hasOne' ? 1 : null)
                     ->schema($repeaterFields);
 
-                if(empty($relationshipTableData) == false) {
+                if (empty($relationshipTableData) == false) {
                     $form[] = Repeater::make('relationship_table_data')
                         ->hiddenLabel()
                         ->reorderable(false)
@@ -102,37 +98,37 @@ class FormBuilder
         $input = $reference::make($dbColumnName ?? BuilderHelper::getNameFromLabel($fieldLabel))
             ->label($fieldLabel);
 
-        foreach($fieldData as $option => $params) {
-            if(isset($inputTypeCallbacks[$option]) && isset($params)) {
+        foreach ($fieldData as $option => $params) {
+            if (isset($inputTypeCallbacks[$option]) && isset($params)) {
                 $inputTypeCallbacks[$option]($input, [$params]);
             }
         }
 
-        if(
+        if (
             $formAction == FormAction::Edit &&
-            isset($fieldData['enable_relationship']) && 
-            $fieldData['enable_relationship'] == false && 
+            isset($fieldData['enable_relationship']) &&
+            $fieldData['enable_relationship'] == false &&
             $fieldType == 'select'
         ) {
-            $input->formatStateUsing(function (string $state) use ($fieldData): string | array {
+            $input->formatStateUsing(function (string $state) use ($fieldData): string|array {
                 $multiple = isset($fieldData['multiple']) && $fieldData['multiple'] == true;
 
-                if (!is_string($state)) {
+                if (! is_string($state)) {
                     return $state;
                 }
 
                 $decoded = json_decode($state);
 
                 if (is_array($decoded) && json_last_error() === JSON_ERROR_NONE) {
-                    if($multiple) {
+                    if ($multiple) {
                         return $decoded;
                     } else {
                         return implode(', ', $decoded);
                     }
                 }
 
-                if($multiple) {
-                    return [ $state ];
+                if ($multiple) {
+                    return [$state];
                 } else {
                     return $state;
                 }

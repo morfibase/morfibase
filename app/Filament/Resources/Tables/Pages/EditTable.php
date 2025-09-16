@@ -4,25 +4,17 @@ namespace App\Filament\Resources\Tables\Pages;
 
 use App\Filament\Resources\Tables\TableResource;
 use App\Helpers\Table\BuilderHelper;
-use App\Helpers\Table\TableHelper;
 use App\Helpers\Table\Migrations\OneToManyMigration;
 use App\Helpers\Table\Migrations\OneToOneMigration;
-use App\Helpers\Table\Migrations\RelationshipForeignKey;
 use App\Helpers\Table\RelationshipHelper;
-use App\Models\GenericModel;
+use App\Helpers\Table\TableHelper;
 use App\Models\User;
 use Exception;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\ViewAction;
-use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
-use function Illuminate\Log\log;
+use Illuminate\Support\Facades\Schema;
 
 class EditTable extends EditRecord
 {
@@ -56,7 +48,7 @@ class EditTable extends EditRecord
         if (isset($data['relationships']) && is_array($data['relationships'])) {
             // Filter out any relationships where the type is 'belongsTo'
             $filteredRelationships = collect($data['relationships'])->filter(function ($relationship) {
-                return !isset($relationship['relationship_type']) || $relationship['relationship_type'] != 'belongsTo';
+                return ! isset($relationship['relationship_type']) || $relationship['relationship_type'] != 'belongsTo';
             })->values()->toArray();
 
             // Overwrite the original relationships with the filtered ones for the form
@@ -73,19 +65,19 @@ class EditTable extends EditRecord
         $oldSchema = $this->record->fields();
         $oldSchemaColumnNames = [];
 
-        foreach($oldSchema as $field) {
+        foreach ($oldSchema as $field) {
             $oldSchemaColumnNames[] = $field['data']['db_column_name'];
         }
 
         // Look for fields that are present in the $oldSchema but not present in the $data (since they were deleted)
-        $newSchemaColumnNames = array_map(fn($field) => $field['data']['db_column_name'], $fields);
+        $newSchemaColumnNames = array_map(fn ($field) => $field['data']['db_column_name'], $fields);
         $this->toDeleteDbColumns = array_diff($oldSchemaColumnNames, $newSchemaColumnNames);
         $this->toAddDbColumns = BuilderHelper::generateRandomColumnName($data['fields'], $oldSchemaColumnNames);
 
         /**
          * Because we removed the belongsTo relationship when we filled the relationships form we now must add it
          * back so we don't lose it.
-         * 
+         *
          * We did this because we don't want to let the user update the belongsTo relationships as this is used only
          * internally.
          */
@@ -112,7 +104,7 @@ class EditTable extends EditRecord
 
         $toDeleteRelationshipsIds = $existingRelationshipsIds->diff($updatedRelationshipsIds);
         $this->toDeleteRelationships = $existingRelationships
-            ->filter(fn($relationship) => $toDeleteRelationshipsIds->contains($relationship['id']))
+            ->filter(fn ($relationship) => $toDeleteRelationshipsIds->contains($relationship['id']))
             ->toArray();
     }
 
@@ -121,12 +113,12 @@ class EditTable extends EditRecord
         try {
             Schema::table($this->tableName, function (Blueprint $table) {
                 // Delete columns that are no longer needed (this doesn't include relationship related columns)
-                foreach($this->toDeleteDbColumns as $column) {
+                foreach ($this->toDeleteDbColumns as $column) {
                     $table->dropColumn($column);
                 }
 
                 // Add new columns
-                foreach($this->toAddDbColumns as $column) {
+                foreach ($this->toAddDbColumns as $column) {
                     $table->longText($column)->nullable();
                 }
             });
@@ -136,14 +128,14 @@ class EditTable extends EditRecord
             $this->record->save();
 
             // Remove the fields assocaited with deleted relationships
-            foreach($this->toDeleteRelationships as $relationship) {
+            foreach ($this->toDeleteRelationships as $relationship) {
                 $tableA = $relationship['relationship_a_table'];
                 $tableB = $relationship['relationship_b_table'];
                 $relationshipType = $relationship['relationship_type'];
 
-                if($relationshipType == 'hasOne') {
+                if ($relationshipType == 'hasOne') {
                     OneToOneMigration::down($tableB, $tableA);
-                } else if($relationshipType == 'hasMany') {
+                } elseif ($relationshipType == 'hasMany') {
                     OneToManyMigration::down($tableB, $tableA);
                 }
 
@@ -154,7 +146,7 @@ class EditTable extends EditRecord
                 ->danger()
                 ->title('The table could not be updated because of a database error.')
                 ->send();
-            
+
             Log::error([
                 'message' => $e->getMessage(),
                 'location' => 'EditCollection.php, afterSave() method',

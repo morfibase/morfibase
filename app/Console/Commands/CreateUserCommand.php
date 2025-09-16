@@ -32,7 +32,7 @@ class CreateUserCommand extends Command
         $this->call('make:filament-user', [
             '--name' => $name,
             '--email' => $email,
-            '--password' => $password
+            '--password' => $password,
         ]);
     }
 }

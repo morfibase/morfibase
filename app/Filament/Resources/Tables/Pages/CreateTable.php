@@ -4,23 +4,14 @@ namespace App\Filament\Resources\Tables\Pages;
 
 use App\Filament\Resources\Tables\TableResource;
 use App\Helpers\Table\BuilderHelper;
-use App\Helpers\Table\TableHelper;
-use App\Helpers\Table\MigrationHelper;
-use App\Helpers\Table\Migrations\OneToManyMigration;
-use App\Helpers\Table\Migrations\OneToOneMigration;
 use App\Helpers\Table\RelationshipHelper;
-use App\Models\Table;
-use App\Models\GenericModel;
-use App\Models\User;
+use App\Helpers\Table\TableHelper;
 use Exception;
-use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class CreateTable extends CreateRecord
 {
@@ -29,13 +20,13 @@ class CreateTable extends CreateRecord
     public function afterCreate()
     {
         try {
-            $tableName = TableHelper::uuidToTableName($this->record->id); 
+            $tableName = TableHelper::uuidToTableName($this->record->id);
             $schema = $this->record->fields();
 
             Schema::create($tableName, function (Blueprint $table) use ($schema) {
                 $table->uuid('id')->primary();
 
-                foreach($schema as $field) {
+                foreach ($schema as $field) {
                     $table->longText($field['data']['db_column_name'])->nullable();
                 }
             });
@@ -44,7 +35,7 @@ class CreateTable extends CreateRecord
             $this->record->save();
         } catch (Exception $e) {
             $this->record->delete();
-            
+
             Notification::make()
                 ->danger()
                 ->title('The table could not be created because of a database error.')
@@ -57,7 +48,7 @@ class CreateTable extends CreateRecord
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            
+
             $this->halt(shouldRollbackDatabaseTransaction: true);
         }
 
@@ -65,7 +56,7 @@ class CreateTable extends CreateRecord
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
-    {   
+    {
         BuilderHelper::generateRandomColumnName($data['display_field']);
         BuilderHelper::generateRandomColumnName($data['fields']);
 

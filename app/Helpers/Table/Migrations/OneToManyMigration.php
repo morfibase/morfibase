@@ -5,14 +5,13 @@ namespace App\Helpers\Table\Migrations;
 use App\Helpers\Table\TableHelper;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class OneToManyMigration
 {
     /**
      * Run the up migration
-     * 
+     *
      * @param string $tableA is the table which we are modifying
      * @param string $tableB is the table referenced in the foreign key (the fk points to this table)
      */
@@ -25,14 +24,14 @@ class OneToManyMigration
             $table->foreignUuid($columnName)->nullable();
             $table->foreign($columnName, $foreignKeyName)
                 ->references('id')
-                ->on(DB::raw('`' . $tableB . '`'))
+                ->on(DB::raw('`'.$tableB.'`'))
                 ->onDelete('cascade');
         });
     }
 
     /**
      * Run the down migration
-     * 
+     *
      * @param string $tableA is the table which we are modifying
      * @param string $tableB is the table referenced in the foreign key (the fk points to this table)
      */

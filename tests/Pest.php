@@ -30,7 +30,7 @@ pest()->extend(Tests\TestCase::class)
         $this->user = \App\Models\User::factory()->create();
         $this->actingAs($this->user);
     })
-    ->afterEach(function() {
+    ->afterEach(function () {
         \Illuminate\Support\Facades\DB::disconnect();
     })
     ->in('Feature');

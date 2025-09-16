@@ -11,10 +11,10 @@ class RelationshipHelper
 {
     protected static function missingRelationshipData(&$relationship, Table $table)
     {
-        if (!isset($relationship['id'])) {
+        if (! isset($relationship['id'])) {
             $relationship['id'] = (string) Str::uuid();
         }
-            
+
         $relationship['relationship_a_table'] = TableHelper::uuidToTableName($table->id);
     }
 
@@ -22,12 +22,12 @@ class RelationshipHelper
     {
         $newRelationships = $table->relationships;
 
-        foreach($newRelationships as &$relationship) {
-            if($relationship['id'] == null) {
-                self::missingRelationshipData($relationship, $table); 
+        foreach ($newRelationships as &$relationship) {
+            if ($relationship['id'] == null) {
+                self::missingRelationshipData($relationship, $table);
 
                 // Add relationship to the tables
-                if($relationship['relationship_type'] == 'hasOne') {
+                if ($relationship['relationship_type'] == 'hasOne') {
                     $tableA = $relationship['relationship_a_table'];
                     $tableB = $relationship['relationship_b_table'];
 
@@ -36,7 +36,7 @@ class RelationshipHelper
 
                     // Update table B that belongs to table A
                     self::addBelongsToRelationship($tableB, $tableA);
-                } else if($relationship['relationship_type'] == 'hasMany') {
+                } elseif ($relationship['relationship_type'] == 'hasMany') {
                     $tableA = $relationship['relationship_a_table'];
                     $tableB = $relationship['relationship_b_table'];
 
