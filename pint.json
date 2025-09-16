@@ -1,0 +1,14 @@
+{
+	"preset": "laravel",
+	"rules": {
+		"phpdoc_align": {
+			"align": "left"
+		}
+	},
+	"exclude": [
+		"node_modules",
+		"public",
+		"resources",
+		"storage"
+	]
+}
