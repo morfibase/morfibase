@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class GenericModel extends Model
-{    
+{
     use HasUuids;
 
     protected $guarded = [];
@@ -22,12 +22,13 @@ class GenericModel extends Model
         parent::__construct($attributes);
     }
 
-    public static function genericQuery(string | Table $data): Builder
+    public static function genericQuery(string|Table $data): Builder
     {
-        if(is_string($data)) {
+        if (is_string($data)) {
             return (new static)->setTable(TableHelper::uuidToTableName($data))->newQuery();
         } else {
             self::$tableInstance = $data;
+
             return (new static)->setTable(TableHelper::uuidToTableName($data->id))->newQuery();
         }
     }

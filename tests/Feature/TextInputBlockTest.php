@@ -2,7 +2,6 @@
 
 use App\Filament\Resources\Tables\Pages\CreateTable;
 use App\Filament\Resources\Tables\Pages\ViewTable;
-use App\Filament\Resources\Tables\TableResource;
 use App\Models\Table;
 use Filament\Forms\Components\Builder;
 use Illuminate\Support\Str;
@@ -21,41 +20,41 @@ it('text input block required form settings works correctly', function () {
                     'data' => [
                         'label' => 'DisplayFieldName',
                     ],
-                    'type' => 'textInput'
-                ]
+                    'type' => 'textInput',
+                ],
             ],
             'fields' => [
                 [
                     'data' => [
                         'label' => 'TestField',
                         'form' => [
-                            'required' => true
-                        ]
+                            'required' => true,
+                        ],
                     ],
-                    'type' => 'textInput'
-                ]
-            ]
+                    'type' => 'textInput',
+                ],
+            ],
         ])
         ->call('create');
 
-        $table = Table::first();
-        $data = [];
-        
-        $data[$table->display_field[0]['data']['db_column_name']] = 'Display column name';
+    $table = Table::first();
+    $data = [];
 
-        // Testing form field inside the create new action
-        livewire(ViewTable::class, ['record' => $table->id])
-            ->callAction('create_new_table_record', data: $data)
-            ->assertHasFormErrors([
-                $table->fields[0]['data']['db_column_name'] => ['required']
-            ]);
+    $data[$table->display_field[0]['data']['db_column_name']] = 'Display column name';
 
-        $data[$table->fields[0]['data']['db_column_name']] = Str::random();
-        livewire(ViewTable::class, ['record' => $table->id])
-            ->callAction('create_new_table_record', data: $data)
-            ->assertHasNoFormErrors();
+    // Testing form field inside the create new action
+    livewire(ViewTable::class, ['record' => $table->id])
+        ->callAction('create_new_table_record', data: $data)
+        ->assertHasFormErrors([
+            $table->fields[0]['data']['db_column_name'] => ['required'],
+        ]);
 
-        $undoBuilderFake();
+    $data[$table->fields[0]['data']['db_column_name']] = Str::random();
+    livewire(ViewTable::class, ['record' => $table->id])
+        ->callAction('create_new_table_record', data: $data)
+        ->assertHasNoFormErrors();
+
+    $undoBuilderFake();
 });
 
 it('text input block inputType form settings works correctly', function () {
@@ -63,16 +62,16 @@ it('text input block inputType form settings works correctly', function () {
         [
             'inputType' => 'email',
             'wrongData' => 'this is not an email',
-            'correctData' => fake()->email
+            'correctData' => fake()->email,
         ],
         [
             'inputType' => 'numeric',
             'wrongData' => 'this is not a number',
-            'correctData' => 55
+            'correctData' => 55,
         ],
     ];
 
-    foreach($testData as $test) {
+    foreach ($testData as $test) {
         // Reset the db after each iteration
         $dbPath = database_path('database_testing.sqlite');
         touch($dbPath);
@@ -98,41 +97,41 @@ it('text input block inputType form settings works correctly', function () {
                         'data' => [
                             'label' => 'DisplayFieldName',
                         ],
-                        'type' => 'textInput'
-                    ]
+                        'type' => 'textInput',
+                    ],
                 ],
                 'fields' => [
                     [
                         'data' => [
                             'label' => 'TestField',
                             'form' => [
-                                'inputType' => $test['inputType']
-                            ]
+                                'inputType' => $test['inputType'],
+                            ],
                         ],
-                        'type' => 'textInput'
-                    ]
-                ]
+                        'type' => 'textInput',
+                    ],
+                ],
             ])
             ->call('create');
 
-            $table = Table::first();
-            $data = [];
-            
-            $data[$table->display_field[0]['data']['db_column_name']] = 'Display column name';
-            $data[$table->fields[0]['data']['db_column_name']] = $test['wrongData'];
-            // Testing form field inside the create new action
-            livewire(ViewTable::class, ['record' => $table->id])
-                ->callAction('create_new_table_record', data: $data)
-                ->assertHasFormErrors([
-                    $table->fields[0]['data']['db_column_name'] => [$test['inputType']]
-                ]);
+        $table = Table::first();
+        $data = [];
 
-            $data[$table->fields[0]['data']['db_column_name']] = $test['correctData'];
-            livewire(ViewTable::class, ['record' => $table->id])
-                ->callAction('create_new_table_record', data: $data)
-                ->assertHasNoFormErrors();
+        $data[$table->display_field[0]['data']['db_column_name']] = 'Display column name';
+        $data[$table->fields[0]['data']['db_column_name']] = $test['wrongData'];
+        // Testing form field inside the create new action
+        livewire(ViewTable::class, ['record' => $table->id])
+            ->callAction('create_new_table_record', data: $data)
+            ->assertHasFormErrors([
+                $table->fields[0]['data']['db_column_name'] => [$test['inputType']],
+            ]);
 
-            $undoBuilderFake();
-            \Illuminate\Support\Facades\DB::disconnect();
-        }
+        $data[$table->fields[0]['data']['db_column_name']] = $test['correctData'];
+        livewire(ViewTable::class, ['record' => $table->id])
+            ->callAction('create_new_table_record', data: $data)
+            ->assertHasNoFormErrors();
+
+        $undoBuilderFake();
+        \Illuminate\Support\Facades\DB::disconnect();
+    }
 });

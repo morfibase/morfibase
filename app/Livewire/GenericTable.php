@@ -5,30 +5,27 @@ namespace App\Livewire;
 use App\Helpers\Table\FormBuilder;
 use App\Helpers\Table\TableBuilder;
 use App\Helpers\Table\TableHelper;
-use App\Models\Table as ModelTable;
 use App\Models\GenericModel;
+use App\Models\Table as ModelTable;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Contracts\HasForms;
-use Livewire\Component;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Log;
-use App\Models\Table as TableModel; 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
-use function Illuminate\Log\log;
-
-class GenericTable extends Component implements HasForms, HasTable, HasActions
+class GenericTable extends Component implements HasActions, HasForms, HasTable
 {
-    use InteractsWithTable;
-    use InteractsWithForms;
     use InteractsWithActions;
+    use InteractsWithForms;
+    use InteractsWithTable;
 
     public ModelTable $record;
 
@@ -52,38 +49,38 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                     ->fillForm(function ($record) use ($relationships) {
                         $data = $record->toArray();
                         $data['relationship_table_data'] = [];
-                        foreach($relationships as $relationship) {
+                        foreach ($relationships as $relationship) {
                             $relationshipATable = $relationship['relationship_a_table'];
                             $relationshipBTable = $relationship['relationship_b_table'];
                             $tableAId = TableHelper::tableNameToUuid($relationshipATable);
                             $tableBId = TableHelper::tableNameToUuid($relationshipBTable);
                             $tableAForeignKeyName = TableHelper::uuidToForeignKeyName($tableAId);
 
-                            if(in_array($relationship['relationship_type'], ['hasOne', 'hasMany'])) {
+                            if (in_array($relationship['relationship_type'], ['hasOne', 'hasMany'])) {
                                 $data1 = GenericModel::genericQuery($tableBId)
                                     ->where($tableAForeignKeyName, '=', $record->id)
                                     ->get();
-                
-                                $data['relationship_table_data'][][$relationshipBTable] = $data1->toArray();                        
+
+                                $data['relationship_table_data'][][$relationshipBTable] = $data1->toArray();
                             }
                         }
 
                         return $data;
                     })
                     ->schema(FormBuilder::generate($this->record))
-                    ->action(function(array $data, GenericModel $record) use ($tableRecordName) {
+                    ->action(function (array $data, GenericModel $record) use ($tableRecordName) {
                         DB::transaction(function () use ($data, $record, $tableRecordName) {
                             try {
-                                if(isset($data['relationship_table_data'])) {
-                                    foreach($data['relationship_table_data'] as $relationshipData) {
-                                        foreach($relationshipData as $tableName => $tableData) {
+                                if (isset($data['relationship_table_data'])) {
+                                    foreach ($data['relationship_table_data'] as $relationshipData) {
+                                        foreach ($relationshipData as $tableName => $tableData) {
                                             $tableId = TableHelper::tableNameToUuid($tableName);
 
-                                            foreach($tableData as $fields) {
+                                            foreach ($tableData as $fields) {
                                                 $isNew = isset($fields['id']) == false;
 
                                                 // The record exists in the db and we now have to update it
-                                                if($isNew == false) {
+                                                if ($isNew == false) {
                                                     GenericModel::genericQuery($tableId)
                                                         ->where('id', '=', $fields['id'])
                                                         ->update($fields);
@@ -92,7 +89,7 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                         }
                                     }
                                 }
-                                
+
                                 $record->update($data);
                             } catch (Exception $e) {
                                 Log::error([
@@ -106,7 +103,7 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                     ->title("{$tableRecordName} update failed")
                                     ->danger()
                                     ->send();
-                                
+
                                 return;
                             }
 
@@ -114,7 +111,7 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                 ->title("{$tableRecordName} updated successfully")
                                 ->success()
                                 ->send();
-                        });                 
+                        });
                     }),
 
                 Action::make('Edit')
@@ -123,32 +120,32 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                     ->fillForm(function ($record) use ($relationships) {
                         $data = $record->toArray();
                         $data['relationship_table_data'] = [];
-                        foreach($relationships as $relationship) {
+                        foreach ($relationships as $relationship) {
                             $relationshipATable = $relationship['relationship_a_table'];
                             $relationshipBTable = $relationship['relationship_b_table'];
                             $tableAId = TableHelper::tableNameToUuid($relationshipATable);
                             $tableBId = TableHelper::tableNameToUuid($relationshipBTable);
                             $tableAForeignKeyName = TableHelper::uuidToForeignKeyName($tableAId);
 
-                            if(in_array($relationship['relationship_type'], ['hasOne', 'hasMany'])) {
+                            if (in_array($relationship['relationship_type'], ['hasOne', 'hasMany'])) {
                                 $data1 = GenericModel::genericQuery($tableBId)
                                     ->where($tableAForeignKeyName, '=', $record->id)
                                     ->get();
 
-                                $data['relationship_table_data'][][$relationshipBTable] = $data1->toArray();                        
+                                $data['relationship_table_data'][][$relationshipBTable] = $data1->toArray();
                             }
                         }
 
                         return $data;
                     })
                     ->schema(FormBuilder::generate($this->record))
-                    ->action(function(array $data, GenericModel $record) use ($tableRecordName, $relationships) {
-                        DB::transaction(function () use ($data, $record, $tableRecordName, $relationships) {
+                    ->action(function (array $data, GenericModel $record) use ($tableRecordName) {
+                        DB::transaction(function () use ($data, $record, $tableRecordName) {
                             try {
                                 // Creating/Updating/Deleting relationships data
-                                if(isset($data['relationship_table_data'])) {
-                                    foreach($data['relationship_table_data'] as $relationshipData) {
-                                        foreach($relationshipData as $tableName => $tableData) {
+                                if (isset($data['relationship_table_data'])) {
+                                    foreach ($data['relationship_table_data'] as $relationshipData) {
+                                        foreach ($relationshipData as $tableName => $tableData) {
                                             $tableId = TableHelper::tableNameToUuid($tableName);
                                             $foreignKeyName = TableHelper::uuidToForeignKeyName($this->record->id);
                                             $existingRelationshipRecords = GenericModel::genericQuery($tableId)
@@ -164,23 +161,23 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                              * Edge case: If the user removes all the existing record relationships, then the tableData will be empty
                                              * so we will never get to the code bellow to delete the data. Thus we must do it here.
                                              */
-                                            if(empty($tableData)) {
-                                                foreach($existingRelationshipRecords as $existingRecord) {
+                                            if (empty($tableData)) {
+                                                foreach ($existingRelationshipRecords as $existingRecord) {
                                                     $existingRecord->delete();
                                                 }
                                             }
 
-                                            foreach($tableData as $fields) {
+                                            foreach ($tableData as $fields) {
                                                 $isNew = isset($fields['id']) == false;
                                                 $fields[TableHelper::uuidToForeignKeyName($this->record->id)] = $record->id;
 
                                                 /**
                                                  * Create a new record
                                                  */
-                                                if($isNew) {
+                                                if ($isNew) {
                                                     GenericModel::genericQuery($tableId)
                                                         ->create($fields);
-                                                } 
+                                                }
                                                 /**
                                                  * Update record
                                                  */
@@ -196,8 +193,8 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                                 $idsToDelete = $existingRelationshipRecords
                                                     ->pluck('id')
                                                     ->diff($submittedIds);
-                                  
-                                                if (!empty($idsToDelete)) {
+
+                                                if (! empty($idsToDelete)) {
                                                     GenericModel::genericQuery($tableId)
                                                         ->whereIn('id', $idsToDelete)
                                                         ->delete();
@@ -206,7 +203,7 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                         }
                                     }
                                 }
-                                
+
                                 unset($data['relationship_table_data']);
                                 $record->update($data);
                             } catch (Exception $e) {
@@ -221,7 +218,7 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                     ->title("{$tableRecordName} update failed")
                                     ->danger()
                                     ->send();
-                                
+
                                 return;
                             }
 
@@ -229,13 +226,13 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                 ->title("{$tableRecordName} updated successfully")
                                 ->success()
                                 ->send();
-                        });                 
+                        });
                     }),
 
                 Action::make('Delete')
                     ->icon('heroicon-m-trash')
                     ->requiresConfirmation()
-                    ->action(function(array $data, GenericModel $record) use ($tableRecordName) {
+                    ->action(function (array $data, GenericModel $record) use ($tableRecordName) {
                         try {
                             $record->delete();
                         } catch (Exception $e) {
@@ -250,16 +247,16 @@ class GenericTable extends Component implements HasForms, HasTable, HasActions
                                 ->title("{$tableRecordName} delete failed")
                                 ->danger()
                                 ->send();
-                            
+
                             return;
                         }
 
                         Notification::make()
                             ->title("{$tableRecordName} deleted successfully")
                             ->success()
-                            ->send();    
-                    })
-                    
+                            ->send();
+                    }),
+
             ])
             ->toolbarActions([
                 // ...

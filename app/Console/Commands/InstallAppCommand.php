@@ -30,16 +30,16 @@ class InstallAppCommand extends Command
     {
         $envFile = base_path('.env');
         $createEnv = true;
-        
+
         if (file_exists($envFile)) {
             $createEnv = $this->confirm('.env file already exists, do you want to override it?');
         }
 
-        if($createEnv) {
+        if ($createEnv) {
             $database = $this->choice(
                 'Which database do you want to use? (Default: SQLite)',
                 [
-                    'SQLite', 
+                    'SQLite',
                 ],
                 0 // Defaults to SQLite
             );
@@ -58,7 +58,7 @@ class InstallAppCommand extends Command
 
         // Ask user for app details
         $appName = $this->ask('What is your application name?');
-        $appUrl  = $this->ask('What is your application URL? (e.g. https://morfibase.com)');
+        $appUrl = $this->ask('What is your application URL? (e.g. https://morfibase.com)');
 
         // Update .env file
         $envContent = file_get_contents($envFile);
@@ -86,7 +86,7 @@ class InstallAppCommand extends Command
         $dbPath = database_path('database.sqlite');
 
         // Create the SQLite file if it doesn't exist
-        if (!file_exists($dbPath)) {
+        if (! file_exists($dbPath)) {
             touch($dbPath);
             chmod($dbPath, 0600);
             $this->info('SQLite database created');
@@ -94,7 +94,7 @@ class InstallAppCommand extends Command
             $this->warn("\n\nSQLite database already exists, skipping");
         }
 
-        $pdo = new PDO('sqlite:' . $dbPath);
+        $pdo = new PDO('sqlite:'.$dbPath);
         $pdo->exec('PRAGMA journal_mode=WAL;');
         $pdo->exec('PRAGMA synchronous=NORMAL;');
         $pdo->exec('PRAGMA foreign_keys=ON;');
@@ -116,7 +116,7 @@ class InstallAppCommand extends Command
         $this->call('make:filament-user', [
             '--name' => $name,
             '--email' => $email,
-            '--password' => $password
+            '--password' => $password,
         ]);
     }
 }

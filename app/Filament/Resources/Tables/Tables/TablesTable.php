@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Tables\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\Layout\Stack;
@@ -17,8 +15,8 @@ class TablesTable
         return $table
             ->columns([
                 Stack::make([
-                    TextColumn::make('name')
-                ])
+                    TextColumn::make('name'),
+                ]),
             ])
             ->filters([
                 //

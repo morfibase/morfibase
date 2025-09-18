@@ -13,7 +13,7 @@ class TableInfolist
             ->components([
                 Livewire::make('generic-table')
                     ->key('generic-table')
-                    ->columnSpanFull()
+                    ->columnSpanFull(),
             ]);
     }
 }

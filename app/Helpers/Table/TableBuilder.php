@@ -4,16 +4,14 @@ namespace App\Helpers\Table;
 
 use App\Helpers\Table\Callbacks\TableCallbacks;
 use App\Helpers\Table\Constants\Constants;
-use App\Models\Table;
 use App\Models\GenericModel;
+use App\Models\Table;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\TextInputColumn;
-
-use function Illuminate\Log\log;
+use Illuminate\Database\Eloquent\Builder;
 
 class TableBuilder
 {
@@ -25,11 +23,11 @@ class TableBuilder
         $schema = $table->fields();
         $relationships = $table->relationships;
         $formToTableMap = Constants::FORM_TO_TABLE_MAP;
-        
+
         foreach ($schema as $field) {
             $fieldType = $field['type'] ?? null;
 
-            if($fieldType != null) {
+            if ($fieldType != null) {
                 $columnType = $formToTableMap[$fieldType];
             } else {
                 $columnType = null;
@@ -38,7 +36,7 @@ class TableBuilder
             $columnLabel = $field['data']['label'] ?? null;
             $dbColumnName = $field['data']['db_column_name'] ?? null;
 
-            if($columnType && $columnData) {
+            if ($columnType && $columnData) {
                 $tableColumns[] = self::genericColumn($dbColumnName, $columnLabel, $columnType, $classReferences[$columnType], $columnData);
             }
         }
@@ -52,9 +50,9 @@ class TableBuilder
         $input = $reference::make($dbColumnName ?? BuilderHelper::getNameFromLabel($columnLabel))
             ->label($columnLabel);
 
-        if(isset($columnData['view']['table'])) {
-            foreach($columnData['view']['table'] as $option => $params) {
-                if(isset($columnTypeCallbacks[$option]) && isset($params)) {
+        if (isset($columnData['view']['table'])) {
+            foreach ($columnData['view']['table'] as $option => $params) {
+                if (isset($columnTypeCallbacks[$option]) && isset($params)) {
                     $columnTypeCallbacks[$option]($input, [$params]);
                 }
             }
@@ -63,18 +61,13 @@ class TableBuilder
         return $input;
     }
 
-
-
-
-
-
     public static function sharedProperties(array $field, Column &$column)
     {
-        if(isset($field['sortable']) && $field['sortable'] == true) {
+        if (isset($field['sortable']) && $field['sortable'] == true) {
             $column->sortable();
         }
 
-        if(isset($field['searchable']) && $field['searchable']) {
+        if (isset($field['searchable']) && $field['searchable']) {
             $column->searchable();
 
             // $column->searchable(isIndividual:true, query: function (Builder $query, string $search) use ($field): Builder  {
@@ -83,18 +76,18 @@ class TableBuilder
             // });
         }
 
-        if(isset($field['toggleable']) && $field['toggleable'] == true) {
+        if (isset($field['toggleable']) && $field['toggleable'] == true) {
             $column->toggleable();
         }
 
-        if(isset($field['tooltip']) && $field['tooltip']) {
+        if (isset($field['tooltip']) && $field['tooltip']) {
             $column->tooltip($field['tooltip']);
         }
     }
 
     public static function selectColumn($fieldData)
     {
-        if(isset($fieldData['multiple']) && $fieldData['multiple'] == false) {
+        if (isset($fieldData['multiple']) && $fieldData['multiple'] == false) {
             $column = SelectColumn::make($fieldData['db_column_name'])
                 ->native(false)
                 ->placeholder('No data')
@@ -103,17 +96,17 @@ class TableBuilder
                     Notification::make()
                         ->success()
                         ->title('Data updated successfully')
-                        ->send();            
+                        ->send();
                 });
 
-            if($fieldData['enable_relationship'] == false) {
+            if ($fieldData['enable_relationship'] == false) {
                 $column->options($fieldData['options']);
             }
         } else {
             $column = TextColumn::make($fieldData['db_column_name'])
                 ->label($fieldData['label'])
                 ->formatStateUsing(function (string $state, GenericModel $record) {
-                    if (!is_string($state)) {
+                    if (! is_string($state)) {
                         return $state;
                     }
 
@@ -124,7 +117,7 @@ class TableBuilder
                     }
 
                     return $state;
-                
+
                 });
         }
 
@@ -142,9 +135,8 @@ class TableBuilder
                 Notification::make()
                     ->success()
                     ->title('Data updated successfully')
-                    ->send();            
+                    ->send();
             });
-
 
         self::sharedProperties($fieldData, $column);
 
