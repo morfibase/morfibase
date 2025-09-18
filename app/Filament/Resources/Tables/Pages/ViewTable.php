@@ -21,7 +21,7 @@ class ViewTable extends ViewRecord
     public function getHeaderActions(): array
     {
         return [
-            Action::make('create_new_collection_item')
+            Action::make('create_new_table_record')
                 ->icon('heroicon-m-document-plus')
                 ->label('Create new ' . strtolower($this->record->name))
                 ->schema(FormBuilder::generate($this->record))
