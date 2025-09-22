@@ -16,6 +16,11 @@ class Constants
     public const FORM_CLASS_REFERENCES = [
         'textInput' => 'Filament\Forms\Components\TextInput',
         'select' => 'Filament\Forms\Components\Select',
+        'checkbox' => 'Filament\Forms\Components\Checkbox',
+        'toggle' => 'Filament\Forms\Components\Toggle',
+        'checkboxList' => 'Filament\Forms\Components\CheckboxList',
+        'radio' => 'Filament\Forms\Components\Radio',
+        'fileUpload' => 'Filament\Forms\Components\FileUpload',
     ];
 
     public const TABLE_CLASS_REFERENCES = [
@@ -23,6 +28,7 @@ class Constants
         // 'selectColumn' => 'Filament\Tables\Columns\SelectColumn',
 
         'textColumn' => 'Filament\Tables\Columns\TextColumn',
+        'imageColumn' => 'Filament\Tables\Columns\ImageColumn',
     ];
 
     public const FORM_TO_TABLE_MAP = [
@@ -31,5 +37,10 @@ class Constants
 
         'textInput' => 'textColumn',
         'select' => 'textColumn',
+        'checkbox' => 'textColumn',
+        'toggle' => 'textColumn',
+        'checkboxList' => 'textColumn',
+        'radio' => 'textColumn',
+        'fileUpload' => 'imageColumn',
     ];
 }

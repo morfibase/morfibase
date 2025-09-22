@@ -22,3 +22,7 @@
 .fi-sidebar-nav {
     @apply gap-1;
 }
+
+.fi-fo-file-upload-editor {
+    @apply w-auto h-auto;
+}

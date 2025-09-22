@@ -8,6 +8,7 @@ use App\Helpers\Table\Migrations\OneToManyMigration;
 use App\Helpers\Table\Migrations\OneToOneMigration;
 use App\Helpers\Table\RelationshipHelper;
 use App\Helpers\Table\TableHelper;
+use App\Models\GenericModel;
 use App\Models\User;
 use Exception;
 use Filament\Notifications\Notification;
@@ -15,6 +16,9 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+
+use function PHPUnit\Framework\isArray;
 
 class EditTable extends EditRecord
 {
@@ -26,7 +30,13 @@ class EditTable extends EditRecord
 
     protected array $toDeleteRelationships = [];
 
+    protected array $toDeleteFiles = [];
+
     protected ?string $tableName;
+
+    protected array $oldFieldOptions = [];
+
+    protected array $newFieldOptions = [];
 
     protected function getHeaderActions(): array
     {
@@ -91,11 +101,39 @@ class EditTable extends EditRecord
         $mergedRelationships = $submittedRelationships->merge($belongsToRelationships);
         $data['relationships'] = $mergedRelationships->toArray();
 
+        /**
+         * Delete files associated with a particular field that was deleted
+         */
+        foreach ($this->toDeleteDbColumns as $column) {
+            $fieldData = collect($this->record->fields)
+                ->filter(fn($field) => $field['data']['db_column_name'] == $column)
+                ->first();
+            $genericRecord = GenericModel::genericQuery($this->record)->first();
+            $files = json_decode($genericRecord[$column]);
+
+            if(is_array($files)) {
+                foreach($files as $file) {
+                    $this->toDeleteFiles[] = [
+                        'disk' => $fieldData['data']['form']['disk'],
+                        'file' => $file
+                    ];
+                }
+            } 
+        }
+        
         return $data;
     }
 
     public function beforeSave()
     {
+        foreach($this->record->fields as $field) {
+            $this->oldFieldOptions[$field['data']['db_column_name']] = $field;
+        }
+
+        foreach($this->data['fields'] as $field) {
+            $this->newFieldOptions[$field['data']['db_column_name']] = $field;
+        }
+
         $existingRelationships = isset($this->record['relationships']) ? collect($this->record['relationships']) : collect([]);
         $updatedRelationships = isset($this->data['relationships']) ? collect($this->data['relationships']) : collect([]);
 
@@ -140,6 +178,45 @@ class EditTable extends EditRecord
                 }
 
                 RelationshipHelper::removeBelongsToRelationship($tableB, $tableA);
+            }
+
+            foreach($this->oldFieldOptions as $columnName => $oldField) {
+                if(isset($this->newFieldOptions[$columnName]) && $oldField['type'] == 'fileUpload') {
+                    $oldFieldDisk = $oldField['data']['form']['disk'];
+                    $newFieldDisk = $this->newFieldOptions[$columnName]['data']['form']['disk'];
+
+                    /**
+                     * Check if the user switched file visibility from public to private or vice versa.
+                     */
+                    if($oldFieldDisk != $newFieldDisk) {
+                        $genericRecords = GenericModel::genericQuery($this->record)->get();
+
+                        foreach($genericRecords as $genericRecord) {
+                            $files = json_decode($genericRecord[$columnName]);
+
+                            /**
+                             * Move files from old disk to new disk
+                             */
+                            if(is_array($files)) {
+                                foreach($files as $file) {
+                                    Storage::disk($newFieldDisk)->put(
+                                        $file,
+                                        Storage::disk($oldFieldDisk)->get($file)
+                                    );
+
+                                    Storage::disk($oldFieldDisk)->delete($file);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Delete the files marked for deletion
+             */
+            foreach($this->toDeleteFiles as $fileData) {
+                Storage::disk($fileData['disk'])->delete($fileData['file']);
             }
         } catch (Exception $e) {
             Notification::make()

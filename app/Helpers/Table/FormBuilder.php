@@ -25,7 +25,7 @@ class FormBuilder
             $fieldLabel = $field['data']['label'] ?? null;
             $dbColumnName = $field['data']['db_column_name'] ?? null;
 
-            if ($fieldType && $fieldData && $fieldLabel && $dbColumnName) {
+            if ($fieldType && $fieldData && $fieldLabel && $dbColumnName && isset($classReferences[$fieldType])) {
                 $form[] = self::genericField($dbColumnName, $fieldLabel, $fieldType, $classReferences[$fieldType], $fieldData, $formAction);
             }
         }

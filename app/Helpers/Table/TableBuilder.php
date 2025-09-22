@@ -27,11 +27,12 @@ class TableBuilder
         foreach ($schema as $field) {
             $fieldType = $field['type'] ?? null;
 
-            if ($fieldType != null) {
+            if ($fieldType != null && isset($formToTableMap[$fieldType])) {
                 $columnType = $formToTableMap[$fieldType];
             } else {
                 $columnType = null;
             }
+            
             $columnData = $field['data'] ?? null;
             $columnLabel = $field['data']['label'] ?? null;
             $dbColumnName = $field['data']['db_column_name'] ?? null;

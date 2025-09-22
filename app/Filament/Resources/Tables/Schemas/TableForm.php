@@ -69,6 +69,11 @@ class TableForm
                                     ->blocks([
                                         FieldBlock::textInput(),
                                         FieldBlock::select(),
+                                        FieldBlock::checkbox(),
+                                        FieldBlock::toggle(),
+                                        FieldBlock::checkboxList(),
+                                        FieldBlock::radio(),
+                                        FieldBlock::fileUpload(),
                                     ]),
                             ]),
 

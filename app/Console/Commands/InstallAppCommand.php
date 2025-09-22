@@ -82,6 +82,8 @@ class InstallAppCommand extends Command
 
         $this->info('.env file updated with APP_NAME and APP_URL.');
 
+        $this->call('storage:link');
+
         // Create db
         $dbPath = database_path('database.sqlite');
 
