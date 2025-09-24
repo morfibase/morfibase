@@ -16,6 +16,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 
 class FieldBlock
 {
@@ -133,7 +134,10 @@ class FieldBlock
             ->label('Select')
             ->schema([
                 Hidden::make('db_column_name'),
-                Hidden::make('native')->default(false),
+                Hidden::make('form.native')->default(false),
+                Hidden::make('form.multiple')->default(true),
+                Hidden::make('form.minItems')->default(1),
+                Hidden::make('form.maxItems')->default(1),
 
                 Section::make('General settings')
                     ->collapsible()
@@ -170,21 +174,28 @@ class FieldBlock
                                 Toggle::make('form.required')
                                     ->columnSpan(2),
 
-                                Toggle::make('form.multiple')
+                                Toggle::make('mb_multiple')
                                     ->live()
-                                    ->columnSpan(2),
+                                    ->label('Multiple')
+                                    ->columnSpan(2)
+                                    ->afterStateUpdated(function ($state, Set $set) {
+                                        if (! $state) {
+                                            $set('form.minItems', 1);
+                                            $set('form.maxItems', 1);
+                                        }
+                                    }),
 
                                 TextInput::make('form.minItems')
-                                    ->hidden(fn (Get $get) => $get('multiple') == false)
+                                    ->hidden(fn (Get $get) => $get('mb_multiple') == false)
                                     ->live()
                                     ->numeric()
                                     ->minValue(1)
                                     ->columnSpan(1),
 
                                 TextInput::make('form.maxItems')
-                                    ->hidden(fn (Get $get) => $get('multiple') == false)
+                                    ->hidden(fn (Get $get) => $get('mb_multiple') == false)
                                     ->numeric()
-                                    ->minValue(fn (Get $get) => $get('minItems'))
+                                    ->minValue(fn (Get $get) => $get('form.minItems'))
                                     ->columnSpan(1),
                             ]),
 
@@ -538,6 +549,7 @@ class FieldBlock
 
                                 TextInput::make('form.minFiles')
                                     ->live()
+                                    ->numeric()
                                     ->required()
                                     ->label('Minimum number of files')
                                     ->columnSpanFull()
@@ -546,6 +558,7 @@ class FieldBlock
 
                                 TextInput::make('form.maxFiles')
                                     ->required()
+                                    ->numeric()
                                     ->columnSpanFull()
                                     ->label('Maximum number of files')
                                     ->minValue(fn(Get $get) => $get('form.minFiles'))
@@ -553,12 +566,16 @@ class FieldBlock
 
                                 TextInput::make('form.minSize')
                                     ->live()
+                                    ->numeric()
                                     ->label('Minimum size of a file')
                                     ->columnSpanFull()
+                                    ->prefix('KB')
                                     ->minValue(0),
 
                                 TextInput::make('form.maxSize')
+                                    ->numeric()
                                     ->columnSpanFull()
+                                    ->prefix('KB')
                                     ->label('Maximum size of a file')
                                     ->minValue(fn(Get $get) => $get('form.minSize')),   
                             ])

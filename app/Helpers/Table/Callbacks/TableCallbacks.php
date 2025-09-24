@@ -39,4 +39,18 @@ class TableCallbacks
             'label' => fn (Field $input, array $params = []) => $input->label(...$params),
         ];
     }
+
+    public static function fileCountColumn(): array
+    {
+        return [
+            'label' => fn (Field $input, array $params = []) => $input->label(...$params),
+        ];
+    }
+
+    public static function multiOptionColumn(): array
+    {
+        return [
+            'label' => fn (Field $input, array $params = []) => $input->label(...$params),
+        ];
+    }
 }

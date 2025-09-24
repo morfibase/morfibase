@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Illuminate\Support\Facades\Storage;
 
+use function PHPUnit\Framework\isArray;
+
 class GenericTable extends Component implements HasActions, HasForms, HasTable
 {
     use InteractsWithActions;
@@ -126,20 +128,22 @@ class GenericTable extends Component implements HasActions, HasForms, HasTable
 
                                 // Check if there are file upload fields that were deleted (so we delete the stored files too)
                                 foreach($fields as $field) {
-                                    if($field['type'] == 'fileUpload') {
-                                        $columnName = $field['data']['db_column_name'];
-                                        $oldColumnData = json_decode($oldData[$columnName], true);
-                                        $newColumnData = $newData[$columnName];
+                                    if(is_array($field)) {
+                                        if($field['type'] == 'fileUpload') {
+                                            $columnName = $field['data']['db_column_name'];
+                                            $oldColumnData = json_decode($oldData[$columnName], true);
+                                            $newColumnData = $newData[$columnName];
 
-                                        if(is_array($oldColumnData) && is_array($newColumnData)) {
-                                            $toDeleteFiles = array_values(array_diff($oldColumnData, $newColumnData));
-                                        } else {
-                                            $toDeleteFiles = [];
-                                        }
+                                            if(is_array($oldColumnData) && is_array($newColumnData)) {
+                                                $toDeleteFiles = array_values(array_diff($oldColumnData, $newColumnData));
+                                            } else {
+                                                $toDeleteFiles = [];
+                                            }
 
-                                        foreach($toDeleteFiles as $file) {
-                                            $disk = $field['data']['form']['disk'];
-                                            Storage::disk($disk)->delete($file);
+                                            foreach($toDeleteFiles as $file) {
+                                                $disk = $field['data']['form']['disk'];
+                                                Storage::disk($disk)->delete($file);
+                                            }
                                         }
                                     }
                                 }

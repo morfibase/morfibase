@@ -118,8 +118,9 @@ class FormCallbacks
             'reorderable' => fn (Field $input, array $params = []) => $input->reorderable(...$params),
             'openable' => fn (Field $input, array $params = []) => $input->openable(...$params),
             'downloadable' => fn (Field $input, array $params = []) => $input->downloadable(...$params),
+            'deletable' => fn (Field $input, array $params = []) => $input->deletable(...$params),
             'previewable' => fn (Field $input, array $params = []) => $input->previewable(...$params),
-            'acceptedFileTypes' => fn (Field $input, array $params = []) => isset($params[0]) && is_array($params[0]) && isEmpty($params[0]) == false ? dd($params[0]) : $input,
+            'acceptedFileTypes' => fn (Field $input, array $params = []) => isset($params[0]) && is_array($params[0]) && count($params[0]) != 0 ? $input->acceptedFileTypes($params[0]) : $input,
             'minSize' => fn (Field $input, array $params = []) => isset($params[0]) ? $input->minSize($params[0]) : $input,
             'maxSize' => fn (Field $input, array $params = []) => isset($params[0]) ? $input->maxSize($params[0]) : $input,
         ];

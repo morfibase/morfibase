@@ -24,23 +24,19 @@ class Constants
     ];
 
     public const TABLE_CLASS_REFERENCES = [
-        // 'textInputColumn' => 'Filament\Tables\Columns\TextInputColumn',
-        // 'selectColumn' => 'Filament\Tables\Columns\SelectColumn',
-
         'textColumn' => 'Filament\Tables\Columns\TextColumn',
         'imageColumn' => 'Filament\Tables\Columns\ImageColumn',
+        'fileCountColumn' => 'App\Filament\Tables\Columns\FileCountColumn',
+        'multiOptionColumn' => 'App\Filament\Tables\Columns\MultiOptionColumn',
     ];
 
     public const FORM_TO_TABLE_MAP = [
-        // 'textInput' => 'textInputColumn',
-        // 'select' => 'selectColumn',
-
         'textInput' => 'textColumn',
-        'select' => 'textColumn',
+        'select' => 'multiOptionColumn',
         'checkbox' => 'textColumn',
         'toggle' => 'textColumn',
-        'checkboxList' => 'textColumn',
+        'checkboxList' => 'multiOptionColumn',
         'radio' => 'textColumn',
-        'fileUpload' => 'imageColumn',
+        'fileUpload' => 'fileCountColumn',
     ];
 }

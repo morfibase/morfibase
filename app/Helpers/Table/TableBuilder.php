@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Table;
 
+use App\Filament\Tables\Columns\FileCountColumn;
 use App\Helpers\Table\Callbacks\TableCallbacks;
 use App\Helpers\Table\Constants\Constants;
 use App\Models\GenericModel;
@@ -11,7 +12,6 @@ use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\TextInputColumn;
-use Illuminate\Database\Eloquent\Builder;
 
 class TableBuilder
 {
@@ -142,5 +142,22 @@ class TableBuilder
         self::sharedProperties($fieldData, $column);
 
         return $column;
+    }
+
+    public static function fileCountColumn($fieldData)
+    {
+        $column = FileCountColumn::make($fieldData['db_column_name'])
+            ->placeholder('No data')
+            ->label($fieldData['label'])
+            ->afterStateUpdated(function ($record, $state) {
+                Notification::make()
+                    ->success()
+                    ->title('Data updated successfully')
+                    ->send();
+            });
+
+        self::sharedProperties($fieldData, $column);
+
+        return $column; 
     }
 }
